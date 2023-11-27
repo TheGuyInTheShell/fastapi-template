@@ -30,3 +30,5 @@ def get_sync_db():
         yield db
     finally:
         db.close()
+
+BaseSync.metadata.create_all(engineSync)
