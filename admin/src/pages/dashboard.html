@@ -1,0 +1,13 @@
+{% extends '/layouts/panel.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="/node_modules/apexcharts/dist/apexcharts.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <section class="container">
+        {% include '/components/dashboard/graph.html' %}
+    </section>
+{% endblock %}

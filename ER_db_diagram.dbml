@@ -1,0 +1,108 @@
+Table users {
+  id int [pk]
+  _id varchar [pk]
+  username varchar
+  password varchar
+  role varchar
+  email email
+  create_at date
+  delete_at date
+  update_at date
+}
+
+Enum protocols {
+  "rstp"
+  "http"
+}
+
+Enum Dir {
+  "IN"
+  "OUT"
+}
+
+Table cameras {
+  id int [pk]
+  _id varchar [pk]
+  ip varchar [unique]
+  protocol protocols
+  serial varchar [unique]
+  brand varchar
+  content_directory varchar
+  user varchar
+  password varchar
+  port varchar
+  direction Dir
+  disable bool
+  create_at date
+  delete_at date
+  update_at date
+}
+
+
+
+Table register_vehicles_in_out {
+  id int [pk]
+  _id varchar [pk]
+  plate varchar [fts]
+  moment timestamp
+  create_at date [pk] // partition by day
+  direction Dir
+  camera int
+}
+
+
+Table clients {
+  id int [pk]
+  _id varchar [pk]
+  first_names varchar [fts]
+  last_names varchar [fts]
+  phone varchar
+  dni varchar [unique]
+  create_at date
+  delete_at date
+  update_at date
+}
+
+Table clients_cars {
+  _id varchar [pk] // same _id of clients
+  vehicle_ref varchar [ref: - vehicles._id]
+}
+Table cars_clients {
+  _id varchar [pk] // same _id of cars
+  client_ref varchar [ref: - clients._id]
+}
+
+Table vehicles {
+  id int [pk]
+  _id varchar [pk]
+  plate varchar [unique]
+  color varchar
+  model varchar
+  brand varchar
+  create_at date
+  delete_at date
+  update_at date
+}
+
+Table subscriptions {
+  id int [pk]
+  _id varchar [pk] // same _id of client
+  promotion varchar [ref: - promotions._id]
+  end_at date
+  create_at date
+  delete_at date
+  update_at date
+}
+
+Table promotions {
+  id int [pk]
+  _id varchar [pk]
+  name varchar
+  duration_days int
+  discount_percent int // 1 to 99
+  valid_before date
+  valid_after date
+  create_at date
+  delete_at date
+  update_at date
+}

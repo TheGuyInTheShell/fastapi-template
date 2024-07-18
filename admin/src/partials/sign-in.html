@@ -1,0 +1,13 @@
+{% if success %}    
+<div id="notification" class="success">
+<div class="alert alert-info text-white mb-4 success">
+  <span>Sign in successfully.</span>
+</div>
+</div>
+{% else %}
+<div id="notification">
+  <div class="alert alert-error text-white mb-4">
+    <span>Sign in error: {{ detail }}.</span>
+  </div>
+</div>
+{% endif %}

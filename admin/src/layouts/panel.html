@@ -1,0 +1,13 @@
+{% extends 'index.html' %}
+
+{% block page %}
+  <div class="drawer md:drawer-open">
+    <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+  <div class="drawer-content p-5">
+    <label for="my-drawer-2" class="btn btn-primary drawer-button md:hidden">Open drawer</label>
+    {% block content %}{% endblock %}
+  </div>
+    <!-- Sidebar content here -->
+    {% include '/components/panel/sidebar.html'   %}
+  </div>
+{% endblock %}

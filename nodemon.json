@@ -1,0 +1,6 @@
+{
+    "watch": ["admin/src", "admin/global"],
+    "ext": "html,js,css",
+    "exec": "npx tailwindcss -i ./admin/global/css/app.css -o ./admin/static/css/app.css"
+  }
+  

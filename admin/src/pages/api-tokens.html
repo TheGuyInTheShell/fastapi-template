@@ -1,0 +1,17 @@
+{% extends '/layouts/panel.html' %}
+
+{% block title %}Api - Tokens{% endblock %}
+
+{% block content %}
+    <section class="flex justify-between items-center">
+        <div>
+            <h1 class="font-semibold text-xl">Create Api Token</h1>
+        </div>
+        <div>
+            <button class="btn btn-primary text-white">SAVE</button>
+        </div>
+    </section>
+    <section class="container inline-flex items-center justify-center my-10">
+        {% include '/components/api-tokens/card-generate.html'   %}
+    </section>
+{% endblock %}

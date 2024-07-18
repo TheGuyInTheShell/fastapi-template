@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <img id="frame"></img>
+<script type="module">
+    import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+    
+    const socket = io("ws://localhost:8000", {
+        path: "/sio/socket.io",
+        auth: {
+            "key": "val"
+        }
+    });
+
+    socket.on("connect", (msg) => {
+        console.log(msg)
+    });
+
+    
+    socket.on("sv:live:0", (msg)=>{
+        let array = new Uint8ClampedArray(msg);
+        let url = URL.createObjectURL(new Blob([msg], {type: 'image/jpg'})); // Ajusta el tipo según sea necesario
+        
+        let img = document.querySelector('#frame');
+        img.src = url;
+    })
+
+    //socket.on("test2", (msg)=> console.log(msg))
+
+
+</script>
+</body>
+</html>
