@@ -10,24 +10,27 @@ This project template provides a starting point for building web applications us
 -   **Jinja Templates**: A template engine for Python, used for generating HTML pages.
 -   **SocketIO**: Enables real-time, bidirectional, and event-based communication between the browser and the server.
 -   **SQLAlchemy**: The Python SQL toolkit and ORM for database access.
+-   **Postgres**: Async and sync conection ready for Postgresql
 -   **Nodemon**: A utility that will monitor for any changes in your source and automatically restart your server.
 -   **Administrative Panel**: A built-in panel for managing API resources and configurations.
+-   **Aiohttp**: An async http request package
+-   **Extra**: Auto permission generator per endpoint and view, module arquitecture and auto add route following the file and folder content
 
 ## Getting Started
 
 ### Prerequisites
 
-Ensure you have Python 3.6 or newer installed on your system. Also, make sure Node.js and npm are installed for handling frontend dependencies.
+Ensure you have Python 3.8 or newer installed on your system. Also, make sure Node.js and npm are installed for handling frontend dependencies.
 
 ### Installation
 
 1.  Clone the repository:
 
-`git clone https://your-repository-url.git cd your-project-directory` 
+`git clone https://github.com/TheGuyInTheShell/fastapi-template.git cd your-project-directory` 
 
 2.  Install backend dependencies:
 
-`pip install -r requirements.txt` 
+`pip install -r conda.txt` 
 
 3.  Install frontend dependencies:
 
@@ -39,17 +42,13 @@ To run the backend server, execute:
 
 `uvicorn app.main:app --reload` 
 
-To start the frontend development server with hot-reloading, run:
+To start tailwind compilation, run:
 
-`npm run dev` 
+`nodemon` 
 
-This command utilizes Nodemon to watch for changes in your frontend files and automatically restarts the server.
+This command utilizes Nodemon to watch for changes in your frontend files and automatically rebuild the css.
 
 ### Building for Production
-
-To build the frontend assets for production, run:
-
-`npm run build` 
 
 Then, serve your FastAPI application with Uvicorn in production mode:
 
