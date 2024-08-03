@@ -1,5 +1,4 @@
-import os
-from importlib import import_module
+from core.utils.import_modules import import_modules
 
 from fastapi import APIRouter, Depends
 
@@ -16,13 +15,4 @@ def response():
     channel.emit("test", "args")
     return {"result": "Ok!"}
 
-
-module_names = [f for f in os.listdir("modules")]
-
-for module_name in module_names:
-    try:
-        module = import_module(f"modules.{module_name}.controller")
-        api_router.include_router(module.router, prefix=f"/api/{module_name}")
-    except Exception as e:
-        print(f"Error importing module {module_name}: {e}")
-        continue
+import_modules(api_router)

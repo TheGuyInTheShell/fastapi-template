@@ -7,9 +7,10 @@ from .schemas import RQMenuRole, RSMenuRole, RSMenuRoleList
 
 # prefix /menu
 router = APIRouter()
+tag = 'menu - roles'
     
 
-@router.get('id/{id}', response_model=RSMenuRole, status_code=200, tags=["menu"])
+@router.get('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
 async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole.find_one(db, id)
@@ -19,7 +20,7 @@ async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> R
         raise e
 
 
-@router.get('/', response_model=RSMenuRoleList, status_code=200, tags=["menu"])
+@router.get('/', response_model=RSMenuRoleList, status_code=200, tags=[tag])
 async def get_Permissions(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 
@@ -51,7 +52,7 @@ async def get_Permissions(pag: Optional[int] = 1,
         raise e
 
 
-@router.post('/', response_model=RSMenuRole, status_code=201, tags=["menu"])
+@router.post('/', response_model=RSMenuRole, status_code=201, tags=[tag])
 async def create_Permission(menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole(**menu_role.model_dump()).save(db)
@@ -61,7 +62,7 @@ async def create_Permission(menu_role: RQMenuRole, db: AsyncSession = Depends(ge
         raise e
 
 
-@router.delete('id/{id}', status_code=204, tags=["menu"])
+@router.delete('id/{id}', status_code=204, tags=[tag])
 async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await MenuRole.delete(db, id)
@@ -70,7 +71,7 @@ async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -
         raise e
 
 
-@router.put('id/{id}', response_model=RSMenuRole, status_code=200, tags=["menu"])
+@router.put('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
 async def update_Permission(id: str, menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole.update(db, id, menu_role.model_dump())
