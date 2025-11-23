@@ -1,73 +1,591 @@
-# api_version_MC
+# FastAPI Template
 
-This project template provides a starting point for building web applications using FastAPI, Uvicorn, and integrating frontend technologies like Tailwind CSS, Jinja templates, SocketIO, SQLAlchemy, and an administrative panel for API management.
+Una plantilla completa y lista para producción para construir aplicaciones web modernas con FastAPI, incluyendo autenticación, gestión de permisos, WebSockets en tiempo real, y un panel administrativo.
 
-## Features
+## 🚀 Características Principales
 
--   **FastAPI**: A modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
--   **Uvicorn**: An ASGI server implementation, using uvloop and httptools.
--   **Tailwind CSS**: Utility-first CSS framework for rapidly building custom designs.
--   **Jinja Templates**: A template engine for Python, used for generating HTML pages.
--   **SocketIO**: Enables real-time, bidirectional, and event-based communication between the browser and the server.
--   **SQLAlchemy**: The Python SQL toolkit and ORM for database access.
--   **Postgres**: Async and sync conection ready for Postgresql
--   **Nodemon**: A utility that will monitor for any changes in your source and automatically restart your server.
--   **Administrative Panel**: A built-in panel for managing API resources and configurations.
--   **Aiohttp**: An async http request package
--   **Extra**: Auto permission generator per endpoint and view, module arquitecture and auto add route following the file and folder content
+### **Backend Robusto**
+- **FastAPI**: Framework web moderno y de alto rendimiento para construir APIs con Python 3.11+
+- **Uvicorn**: Servidor ASGI de alto rendimiento con soporte asíncrono
+- **SQLAlchemy**: ORM potente con soporte para conexiones síncronas y asíncronas
+- **PostgreSQL**: Base de datos relacional con soporte completo async/sync
+- **Pydantic**: Validación de datos y serialización automática
 
-## Getting Started
+### **Autenticación y Seguridad**
+- **JWT (JSON Web Tokens)**: Sistema de autenticación basado en tokens
+- **OAuth2**: Implementación de flujo OAuth2 con Password Bearer
+- **Sistema de Roles y Permisos**: Control de acceso basado en roles (RBAC)
+- **Generación Automática de Permisos**: Los permisos se generan automáticamente por cada endpoint
+- **Middleware de Verificación**: Verificación de JWT y roles en cada petición
 
-### Prerequisites
+### **Comunicación en Tiempo Real**
+- **Socket.IO**: Comunicación bidireccional y basada en eventos entre cliente y servidor
+- **Eventos Asíncronos**: Sistema de eventos personalizado para comunicación entre módulos
+- **WebSocket Support**: Soporte completo para conexiones WebSocket
 
-Ensure you have Python 3.8 or newer installed on your system. Also, make sure Node.js and npm are installed for handling frontend dependencies.
+### **Panel Administrativo**
+- **Interfaz de Administración**: Panel web para gestionar recursos de la API
+- **Tailwind CSS**: Framework CSS utility-first para diseños personalizados
+- **Jinja2 Templates**: Motor de plantillas para generar páginas HTML dinámicas
+- **Gestión de Menús**: Sistema de menús dinámicos basado en roles
 
-### Installation
+### **Arquitectura Modular**
+- **Estructura por Módulos**: Organización clara y escalable del código
+- **Auto-registro de Rutas**: Las rutas se registran automáticamente siguiendo la estructura de carpetas
+- **Separación de Responsabilidades**: Controllers, Services, Models, y Schemas separados
 
-1.  Clone the repository:
+### **Monitoreo y Desarrollo**
+- **Prometheus**: Métricas y monitoreo de la aplicación integrado
+- **APScheduler**: Programación de tareas asíncronas y trabajos en segundo plano
+- **Redis**: Caché y almacenamiento de sesiones
+- **Nodemon**: Recarga automática durante el desarrollo
+- **Docker**: Contenedorización completa con Docker y Docker Compose
 
-`git clone https://github.com/TheGuyInTheShell/fastapi-template.git cd your-project-directory` 
+## 📁 Estructura del Proyecto
 
-2.  Install backend dependencies:
+```
+fastapi_template/
+├── core/                      # Núcleo de la aplicación
+│   ├── database/             # Configuración de base de datos
+│   │   ├── async_connection.py   # Conexión asíncrona a PostgreSQL
+│   │   ├── sync_connection.py    # Conexión síncrona a PostgreSQL
+│   │   ├── base.py               # Modelos base de SQLAlchemy
+│   │   └── utils/                # Utilidades de base de datos (paginación, etc.)
+│   ├── middlewares/          # Middlewares personalizados
+│   │   ├── jwt_verify.py         # Verificación de tokens JWT
+│   │   └── role_verify.py        # Verificación de permisos por rol
+│   ├── jobs/                 # Tareas programadas con APScheduler
+│   ├── routes/               # Configuración de rutas principales
+│   ├── services/             # Servicios compartidos
+│   ├── schemas/              # Schemas Pydantic compartidos
+│   ├── cache/                # Sistema de caché con Redis
+│   ├── event/                # Sistema de eventos personalizado
+│   └── utils/                # Utilidades generales
+│
+├── modules/                   # Módulos de funcionalidad
+│   ├── auth/                 # Autenticación (sign-in, sign-up)
+│   ├── users/                # Gestión de usuarios
+│   ├── roles/                # Gestión de roles
+│   ├── permissions/          # Gestión de permisos
+│   ├── tokens/               # Gestión de tokens API
+│   └── menu/                 # Sistema de menús dinámicos
+│       └── role/             # Relación menú-rol
+│
+├── sockets/                   # WebSockets y Socket.IO
+│   ├── main.py               # Inicialización de eventos Socket.IO
+│   └── live/                 # Eventos en tiempo real
+│
+├── admin/                     # Panel administrativo
+│   ├── src/                  # Plantillas Jinja2
+│   ├── static/               # Archivos estáticos (CSS, JS, imágenes)
+│   ├── templates/            # Configuración de plantillas
+│   └── global/               # Configuración global del admin
+│
+├── public/                    # Archivos públicos estáticos
+├── logs/                      # Archivos de registro
+├── main.py                    # Punto de entrada de la aplicación
+├── requirements.txt           # Dependencias Python
+├── Dockerfile                 # Configuración Docker
+├── docker-compose.yaml        # Orquestación de servicios
+├── .env.example              # Ejemplo de variables de entorno
+└── ER_db_diagram.dbml        # Diagrama de base de datos
+```
 
-`pip install -r conda.txt` 
+## 🛠️ Instalación
 
-3.  Install frontend dependencies:
+### Prerrequisitos
 
-`npm  install` 
+- Python 3.11 o superior
+- PostgreSQL 12 o superior
+- Node.js y npm (para desarrollo frontend)
+- Redis (opcional, para caché)
+- Docker y Docker Compose (opcional)
 
-### Running the Project
+### Opción 1: Instalación Local
 
-To run the backend server, execute:
+1. **Clonar el repositorio**
+```bash
+git clone https://github.com/TheGuyInTheShell/fastapi-template.git
+cd fastapi-template
+```
 
-`uvicorn app.main:app --reload` 
+2. **Crear y configurar el entorno virtual**
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
 
-To start tailwind compilation, run:
+3. **Instalar dependencias de Python**
+```bash
+pip install -r requirements.txt
+```
 
-`nodemon` 
+4. **Instalar dependencias de Node.js** (para Tailwind CSS)
+```bash
+npm install
+```
 
-This command utilizes Nodemon to watch for changes in your frontend files and automatically rebuild the css.
+5. **Configurar variables de entorno**
+```bash
+cp .env.example .env
+# Editar .env con tus configuraciones
+```
 
-### Building for Production
+Configuración del archivo `.env`:
+```env
+# JWT Configuration
+JWT_KEY=tu_clave_secreta_jwt_aqui
+JWT_ALG=HS256
 
-Then, serve your FastAPI application with Uvicorn in production mode:
+# Database Configuration
+DB_NAME=nombre_base_datos
+DB_USER=usuario_postgres
+DB_PASSWORD=contraseña_postgres
+DB_HOST=localhost
+DB_PORT=5432
 
-`gunicorn -k uvicorn.workers.UvicornWorker app.main:app` 
+# Application Mode
+MODE=DEBUG  # o PRODUCTION
+```
 
-Ensure you have Gunicorn installed (`pip install gunicorn`) for serving the application in a production environment.
+6. **Crear la base de datos**
+```bash
+# Conectarse a PostgreSQL y crear la base de datos
+psql -U postgres
+CREATE DATABASE nombre_base_datos;
+```
 
-## Documentation
+### Opción 2: Instalación con Docker
 
-Refer to the FastAPI documentation for more details on routing, dependencies, security, etc.:  [https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)
+1. **Clonar el repositorio**
+```bash
+git clone https://github.com/TheGuyInTheShell/fastapi-template.git
+cd fastapi-template
+```
 
-For integrating Tailwind CSS with Jinja templates, consult the Tailwind CSS documentation:  [https://tailwindcss.com/docs/guides/jinja](https://tailwindcss.com/docs/guides/jinja)
+2. **Configurar variables de entorno**
+```bash
+cp .env.example .env
+# Editar .env según sea necesario
+```
 
-## Contributing
+3. **Construir y ejecutar con Docker Compose**
+```bash
+docker-compose up --build
+```
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs, enhancements, or new features.
+La aplicación estará disponible en `http://localhost:8880`
 
-## License
+## 🚀 Uso
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-  
+### Desarrollo
 
+**Iniciar el servidor de desarrollo:**
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Compilar Tailwind CSS en modo watch:**
+```bash
+nodemon
+```
+
+**Acceder a la documentación interactiva:**
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+- Métricas Prometheus: `http://localhost:8000/metrics`
+
+### Producción
+
+**Con Gunicorn:**
+```bash
+gunicorn -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000 --workers 4
+```
+
+**Con PM2 (usando ecosystem.config.js):**
+```bash
+pm2 start ecosystem.config.js
+```
+
+**Con Docker:**
+```bash
+docker-compose up -d
+```
+
+## 📚 Módulos y Funcionalidades
+
+### 1. **Módulo de Autenticación** (`modules/auth/`)
+
+Gestiona el registro e inicio de sesión de usuarios.
+
+**Endpoints:**
+- `POST /auth/sign-up` - Registrar nuevo usuario
+- `POST /auth/sign-in` - Iniciar sesión y obtener token JWT
+- `GET /auth/` - Verificar token
+
+**Características:**
+- Encriptación de contraseñas con bcrypt
+- Generación de tokens JWT con expiración configurable
+- Validación de credenciales
+- Prevención de usuarios duplicados
+
+### 2. **Módulo de Usuarios** (`modules/users/`)
+
+Gestión completa de usuarios del sistema.
+
+**Endpoints:**
+- `GET /users/me` - Obtener datos del usuario autenticado
+- `GET /users/` - Listar todos los usuarios (con paginación)
+- `GET /users/id/{id}` - Obtener usuario por ID
+- `PUT /users/id/{id}` - Actualizar usuario
+- `DELETE /users/id/{id}` - Eliminar usuario
+
+**Características:**
+- Paginación automática
+- Filtrado y búsqueda
+- Relación con roles
+- Validación de datos con Pydantic
+
+### 3. **Módulo de Roles** (`modules/roles/`)
+
+Sistema de roles para control de acceso.
+
+**Endpoints:**
+- `GET /roles/` - Listar roles
+- `GET /roles/id/{id}` - Obtener rol por ID
+- `POST /roles/` - Crear nuevo rol
+- `PUT /roles/id/{id}` - Actualizar rol
+- `DELETE /roles/id/{id}` - Eliminar rol
+
+**Características:**
+- Roles jerárquicos
+- Asignación de permisos a roles
+- Relación muchos a muchos con permisos
+
+### 4. **Módulo de Permisos** (`modules/permissions/`)
+
+Gestión granular de permisos.
+
+**Endpoints:**
+- `GET /permissions/` - Listar permisos
+- `GET /permissions/id/{id}` - Obtener permiso por ID
+- `POST /permissions/` - Crear permiso
+- `PUT /permissions/id/{id}` - Actualizar permiso
+- `DELETE /permissions/id/{id}` - Eliminar permiso
+
+**Características:**
+- **Generación automática**: Los permisos se crean automáticamente al iniciar la aplicación basándose en las rutas registradas
+- Control de acceso por endpoint
+- Asignación flexible a roles
+
+### 5. **Módulo de Tokens API** (`modules/tokens/`)
+
+Gestión de tokens de API para integraciones.
+
+**Endpoints:**
+- `GET /tokens/` - Listar tokens
+- `GET /tokens/id/{id}` - Obtener token por ID
+- `POST /tokens/` - Crear nuevo token
+- `PUT /tokens/id/{id}` - Actualizar token
+- `DELETE /tokens/id/{id}` - Eliminar token
+
+### 6. **Módulo de Menús** (`modules/menu/`)
+
+Sistema de menús dinámicos basado en roles.
+
+**Endpoints:**
+- `GET /menu/` - Listar menús
+- `GET /menu/id/{id}` - Obtener menú por ID
+- `POST /menu/` - Crear menú
+- `PUT /menu/id/{id}` - Actualizar menú
+- `DELETE /menu/id/{id}` - Eliminar menú
+
+**Características:**
+- Menús jerárquicos (padres e hijos)
+- Asignación por roles
+- Iconos y ordenamiento personalizado
+
+### 7. **WebSockets y Socket.IO** (`sockets/`)
+
+Comunicación en tiempo real.
+
+**Características:**
+- Eventos personalizados
+- Rooms y namespaces
+- Autenticación de conexiones
+- Broadcast de mensajes
+- Integración con FastAPI
+
+**Ejemplo de uso:**
+```python
+# Servidor (sockets/live/events.py)
+@sio.on('mensaje')
+async def handle_mensaje(sid, data):
+    await sio.emit('respuesta', {'data': 'recibido'}, room=sid)
+```
+
+### 8. **Sistema de Caché** (`core/cache/`)
+
+Caché con Redis para mejorar el rendimiento.
+
+**Características:**
+- Almacenamiento en caché de consultas frecuentes
+- TTL configurable
+- Invalidación de caché
+
+### 9. **Tareas Programadas** (`core/jobs/`)
+
+Ejecución de tareas en segundo plano con APScheduler.
+
+**Características:**
+- Tareas cron
+- Tareas por intervalo
+- Tareas únicas
+- Gestión del ciclo de vida
+
+## 🔧 Arquitectura y Patrones
+
+### Arquitectura Modular
+
+Cada módulo sigue una estructura consistente:
+
+```
+module_name/
+├── controller.py    # Endpoints y rutas
+├── services.py      # Lógica de negocio
+├── models.py        # Modelos de base de datos
+└── schemas.py       # Schemas Pydantic (validación)
+```
+
+### Auto-registro de Rutas
+
+Las rutas se registran automáticamente siguiendo la estructura de carpetas:
+
+```python
+# core/utils/import_modules.py analiza la carpeta modules/
+# y registra automáticamente todos los routers encontrados
+```
+
+### Middleware Pipeline
+
+1. **CORS Middleware**: Configuración de orígenes permitidos
+2. **JWT Verify**: Validación de tokens en rutas protegidas
+3. **Role Verify**: Verificación de permisos basados en roles
+
+### Conexiones de Base de Datos
+
+**Asíncrona** (recomendada para endpoints):
+```python
+from core.database import get_async_db
+
+@router.get("/")
+async def endpoint(db: AsyncSession = Depends(get_async_db)):
+    result = await db.execute(select(User))
+    return result.scalars().all()
+```
+
+**Síncrona** (para inicialización):
+```python
+from core.database.sync_connection import engineSync
+BaseSync.metadata.create_all(engineSync)
+```
+
+## 🔐 Seguridad
+
+### Mejores Prácticas Implementadas
+
+1. **Contraseñas Hasheadas**: Uso de bcrypt para hash seguro
+2. **JWT con Expiración**: Tokens con tiempo de vida limitado
+3. **CORS Configurado**: Control de orígenes permitidos
+4. **Validación de Entrada**: Pydantic valida todos los datos de entrada
+5. **SQL Injection Protection**: SQLAlchemy ORM previene inyecciones SQL
+6. **Variables de Entorno**: Credenciales sensibles en archivos .env
+
+### Generar Clave JWT Segura
+
+```python
+import secrets
+jwt_key = secrets.token_hex(32)
+print(jwt_key)
+```
+
+## 📊 Base de Datos
+
+### Modelos Principales
+
+- **User**: Usuarios del sistema
+- **Role**: Roles de usuario
+- **Permission**: Permisos granulares
+- **Menu**: Elementos del menú
+- **MenuRole**: Relación menú-rol
+- **ApiToken**: Tokens de API
+
+### Migraciones
+
+El proyecto crea las tablas automáticamente al iniciar:
+
+```python
+# En main.py
+BaseSync.metadata.create_all(engineSync)
+BaseAsync.metadata.create_all(engineSync)
+```
+
+Para migraciones más avanzadas, considera usar **Alembic**:
+
+```bash
+pip install alembic
+alembic init alembic
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
+```
+
+## 🎨 Panel Administrativo
+
+El panel administrativo incluye:
+
+- **Dashboard**: Vista general del sistema
+- **Gestión de Usuarios**: CRUD completo
+- **Gestión de Roles y Permisos**: Asignación visual
+- **Configuración de Menús**: Editor de menús
+- **Logs y Monitoreo**: Visualización de logs
+
+**Acceso**: `http://localhost:8000/admin`
+
+## 📈 Monitoreo y Métricas
+
+### Prometheus
+
+Métricas disponibles en `/metrics`:
+
+- Número de peticiones
+- Latencia de respuestas
+- Errores HTTP
+- Uso de recursos
+
+### Integración con Grafana
+
+```yaml
+# Ejemplo de configuración para Grafana
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://localhost:8000/metrics
+```
+
+## 🧪 Testing
+
+### Estructura de Tests (Recomendada)
+
+```
+tests/
+├── test_auth.py
+├── test_users.py
+├── test_roles.py
+└── conftest.py
+```
+
+### Ejemplo de Test
+
+```python
+import pytest
+from httpx import AsyncClient
+from main import app
+
+@pytest.mark.asyncio
+async def test_sign_up():
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.post("/auth/sign-up", json={
+            "username": "testuser",
+            "email": "test@example.com",
+            "password": "password123"
+        })
+        assert response.status_code == 201
+```
+
+## 🌐 Despliegue
+
+### Variables de Entorno para Producción
+
+```env
+MODE=PRODUCTION
+JWT_KEY=clave_super_segura_de_produccion
+DB_HOST=db.produccion.com
+DB_PASSWORD=contraseña_segura
+```
+
+### Nginx como Reverse Proxy
+
+```nginx
+server {
+    listen 80;
+    server_name api.tudominio.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /sio/ {
+        proxy_pass http://localhost:8000/sio/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+### Systemd Service
+
+```ini
+[Unit]
+Description=FastAPI Application
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/path/to/fastapi_template
+ExecStart=/path/to/venv/bin/gunicorn -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Por favor:
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📝 Licencia
+
+Este proyecto está licenciado bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 📞 Soporte
+
+- **Documentación FastAPI**: https://fastapi.tiangolo.com/
+- **Documentación SQLAlchemy**: https://docs.sqlalchemy.org/
+- **Documentación Socket.IO**: https://socket.io/docs/
+- **Repositorio**: https://github.com/TheGuyInTheShell/fastapi-template
+
+## 🎯 Próximas Características
+
+- [ ] Sistema de notificaciones por email
+- [ ] Autenticación con OAuth2 (Google, GitHub)
+- [ ] Rate limiting por usuario
+- [ ] Sistema de auditoría completo
+- [ ] Soporte para múltiples idiomas (i18n)
+- [ ] Tests automatizados completos
+- [ ] CI/CD con GitHub Actions
+
+---
+
+**Desarrollado con ❤️ usando FastAPI**
