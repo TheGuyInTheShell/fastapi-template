@@ -11,9 +11,9 @@ from .services import create_role
 
 # prefix /roles
 router = APIRouter()
-    
+tag = 'roles'
 
-@router.get('/id/{id}', response_model=RSRole, status_code=200, tags=["roles"])
+@router.get('/id/{id}', response_model=RSRole, status_code=200, tags=[tag])
 async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
     try:
         result = await Role.find_one(db, id)
@@ -23,7 +23,7 @@ async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
         raise e
 
 
-@router.get('/', response_model=RSRoleList, status_code=200, tags=["roles"])
+@router.get('/', response_model=RSRoleList, status_code=200, tags=[tag])
 async def get_Roles(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 
@@ -54,7 +54,7 @@ async def get_Roles(pag: Optional[int] = 1,
         raise e
 
 
-@router.post('/', response_model=RSRole, status_code=201, tags=["roles"])
+@router.post('/', response_model=RSRole, status_code=201, tags=[tag])
 async def create_Role(role: RQRole, db: AsyncSession = Depends(get_async_db)) -> RSRole:
     try:
         result = await create_role(db, role)
@@ -64,7 +64,7 @@ async def create_Role(role: RQRole, db: AsyncSession = Depends(get_async_db)) ->
         raise e
 
 
-@router.delete('/id/{id}', status_code=204, tags=["roles"])
+@router.delete('/id/{id}', status_code=204, tags=[tag])
 async def delete_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await Role.delete(db, id)
@@ -73,7 +73,7 @@ async def delete_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> None
         raise e
 
 
-@router.put('/id/{id}', response_model=RSRole, status_code=200, tags=["roles"])
+@router.put('/id/{id}', response_model=RSRole, status_code=200, tags=[tag])
 async def update_Role(id: str, role: RQRole, db: AsyncSession = Depends(get_async_db)) -> RSRole:
     try:
         result = await Role.update(db, id, role.model_dump())

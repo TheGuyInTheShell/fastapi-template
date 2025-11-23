@@ -18,6 +18,8 @@ from core.database.base import BaseAsync, BaseSync
 from core.database.sync_connection import engineSync
 from core.routes import api_router
 from modules.permissions.services import create_permissions_api
+from prometheus_fastapi_instrumentator import Instrumentator
+
 
 app = FastAPI()
 
@@ -45,6 +47,8 @@ templates = Jinja2Templates(directory="admin/src")
 init_templates(templates, app)
 
 app.include_router(api_router)
+
+Instrumentator().instrument(app).expose(app)
 
 BaseSync.metadata.create_all(engineSync)
 BaseAsync.metadata.create_all(engineSync)

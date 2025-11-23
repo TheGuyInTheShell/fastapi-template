@@ -15,8 +15,9 @@ router = APIRouter()
 
 oauth2_schema = OAuth2PasswordBearer('/token')
 
+tag = 'users'
 
-@router.get('/me', response_model=RSUserTokenData, tags=['users'])
+@router.get('/me', response_model=RSUserTokenData, tags=[tag])
 async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
     try:
         if not token:
@@ -36,7 +37,7 @@ async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
         return "Error"
     
     
-@router.get('', tags=['users'])
+@router.get('', tags=[tag])
 async def get_users(db: AsyncSession = Depends(get_async_db)):
     try:
         result = await User.find_some(db, status='exists')

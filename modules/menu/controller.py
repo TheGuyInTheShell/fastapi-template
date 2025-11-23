@@ -10,9 +10,9 @@ from .schemas import RQMenu, RSMenu, RSMenuList
 
 # prefix /menu
 router = APIRouter()
+tag = 'menu'
 
-
-@router.get("/id/{id}", response_model=RSMenu, status_code=200, tags=["menu"])
+@router.get("/id/{id}", response_model=RSMenu, status_code=200, tags=[tag])
 async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenu:
     try:
         result = await Menu.find_one(db, id)
@@ -22,7 +22,7 @@ async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> R
         raise e
 
 
-@router.get("/", response_model=RSMenuList, status_code=200, tags=["menu"])
+@router.get("/", response_model=RSMenuList, status_code=200, tags=[tag])
 async def get_Permissions(
     pag: Optional[int] = 1,
     ord: Literal["asc", "desc"] = "asc",
@@ -57,7 +57,7 @@ async def get_Permissions(
         raise e
 
 
-@router.post("/", response_model=RSMenu, status_code=201, tags=["menu"])
+@router.post("/", response_model=RSMenu, status_code=201, tags=[tag])
 async def create_Permission(
     menu: RQMenu, db: AsyncSession = Depends(get_async_db)
 ) -> RSMenu:
@@ -69,7 +69,7 @@ async def create_Permission(
         raise e
 
 
-@router.delete("/id/{id}", status_code=204, tags=["menu"])
+@router.delete("/id/{id}", status_code=204, tags=[tag])
 async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await Menu.delete(db, id)
@@ -78,7 +78,7 @@ async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -
         raise e
 
 
-@router.put("/id/{id}", response_model=RSMenu, status_code=200, tags=["menu"])
+@router.put("/id/{id}", response_model=RSMenu, status_code=200, tags=[tag])
 async def update_Permission(
     id: str, menu: RQMenu, db: AsyncSession = Depends(get_async_db)
 ) -> RSMenu:

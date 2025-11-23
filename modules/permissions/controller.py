@@ -10,9 +10,9 @@ from .schemas import RQPermission, RSPermission, RSPermissionList
 
 # prefix /permissions
 router = APIRouter()
-    
+tag = 'permissions'
 
-@router.get('/id/{id}', response_model=RSPermission, status_code=200, tags=["permissions"])
+@router.get('/id/{id}', response_model=RSPermission, status_code=200, tags=[tag])
 async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
     try:
         result = await Permission.find_one(db, id)
@@ -22,7 +22,7 @@ async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> R
         raise e
 
 
-@router.get('/', response_model=RSPermissionList, status_code=200, tags=["permissions"])
+@router.get('/', response_model=RSPermissionList, status_code=200, tags=[tag])
 async def get_Permissions(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 
@@ -53,7 +53,7 @@ async def get_Permissions(pag: Optional[int] = 1,
         raise e
 
 
-@router.post('/', response_model=RSPermission, status_code=201, tags=["permissions"])
+@router.post('/', response_model=RSPermission, status_code=201, tags=[tag])
 async def create_Permission(permission: RQPermission, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
     try:
         result = await Permission(**permission.model_dump()).save(db)
@@ -63,7 +63,7 @@ async def create_Permission(permission: RQPermission, db: AsyncSession = Depends
         raise e
 
 
-@router.delete('/id/{id}', status_code=204, tags=["permissions"])
+@router.delete('/id/{id}', status_code=204, tags=[tag])
 async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await Permission.delete(db, id)
@@ -72,7 +72,7 @@ async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -
         raise e
 
 
-@router.put('/id/{id}', response_model=RSPermission, status_code=200, tags=["permissions"])
+@router.put('/id/{id}', response_model=RSPermission, status_code=200, tags=[tag])
 async def update_Permission(id: str, permission: RQPermission, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
     try:
         result = await Permission.update(db, id, permission.model_dump())

@@ -12,14 +12,14 @@ from .services import authenticade_user, create_token, create_user, get_user
 router = APIRouter()
 
 oauth2_schema = OAuth2PasswordBearer("auth/sign-in")
+tag = 'auth'
 
-
-@router.get("/", tags=["authentification"])
+@router.get("/", tags=[tag])
 def token(token: str = Depends(oauth2_schema)):
     return token
 
 
-@router.post("/sign-in", tags=["authentification"])
+@router.post("/sign-in", tags=[tag])
 async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_db)):
     try:
         user = await authenticade_user(
@@ -46,7 +46,7 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
         raise e
 
 
-@router.post("/sign-up", response_model=RSUser, tags=["authentification"])
+@router.post("/sign-up", response_model=RSUser, tags=[tag])
 async def sign_up(
     form_sign_up: RQUser, db: AsyncSession = Depends(get_async_db)
 ) -> RSUser | None:
