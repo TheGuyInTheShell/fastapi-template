@@ -38,6 +38,9 @@ init_sockets_events(sio=sio, app=app)
 
 app.mount("/public", StaticFiles(directory="public"))
 
+# Monta el directorio de node_modules para librerías de npm
+app.mount("/node_modules", StaticFiles(directory="node_modules"), name="node_modules")
+
 # Monta el directorio de archivos estáticos
 app.mount("/static", StaticFiles(directory="admin/static"), name="admin")
 
