@@ -1,0 +1,48 @@
+{% if success %}
+<div class="alert alert-success mb-4">
+    <span>Permissions updated successfully!</span>
+</div>
+{% elif success == False %}
+<div class="alert alert-error mb-4">
+    <span>Error: {{ detail }}</span>
+</div>
+{% endif %}
+
+<h3 class="font-bold text-lg mb-4">Manage Permissions for: {{ role.name }}</h3>
+
+<div class="overflow-y-auto max-h-96">
+    <table class="table table-sm w-full">
+        <thead>
+            <tr>
+                <th>Assigned</th>
+                <th>Name</th>
+                <th>Action</th>
+                <th>Description</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for permission in all_permissions %}
+            <tr>
+                <td>
+                    <input type="checkbox" class="checkbox checkbox-primary" {% if permission.uid in
+                        role_permission_uids %}checked{% endif %}
+                        hx-post="/admin/roles/partial/permissions/{{ role.uid }}/toggle"
+                        hx-vals='{"permission_id": "{{ permission.uid }}", "action": "{% if permission.uid in role_permission_uids %}remove{% else %}assign{% endif %}"}'
+                        hx-target="#modal-content" hx-swap="innerHTML" />
+                </td>
+                <td class="font-semibold">{{ permission.name }}</td>
+                <td><span class="badge badge-outline">{{ permission.action }}</span></td>
+                <td class="text-sm text-gray-600">{{ permission.description }}</td>
+                <td><span class="badge badge-primary badge-sm">{{ permission.type }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <p class="text-sm text-gray-600">
+        Total permissions assigned: <strong>{{ role_permission_uids|length }}</strong>
+    </p>
+</div>

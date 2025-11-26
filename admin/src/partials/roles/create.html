@@ -1,0 +1,42 @@
+{% if success %}
+<div class="alert alert-success mb-4">
+    <span>Role created successfully!</span>
+</div>
+<script>
+    setTimeout(() => window.location.reload(), 1000);
+</script>
+{% elif success == False %}
+<div class="alert alert-error mb-4">
+    <span>Error: {{ detail }}</span>
+</div>
+{% endif %}
+
+<h3 class="font-bold text-lg mb-4">Create New Role</h3>
+
+<form hx-post="/admin/roles/partial/create" hx-target="#modal-content" hx-swap="innerHTML">
+    <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text">Name</span>
+        </label>
+        <input type="text" name="name" placeholder="Role name" class="input input-bordered" required />
+    </div>
+
+    <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text">Description</span>
+        </label>
+        <textarea name="description" placeholder="Role description" class="textarea textarea-bordered"
+            required></textarea>
+    </div>
+
+    <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text">Level</span>
+        </label>
+        <input type="number" name="level" placeholder="0" class="input input-bordered" required />
+    </div>
+
+    <div class="form-control mt-6">
+        <button type="submit" class="btn btn-primary">Create Role</button>
+    </div>
+</form>

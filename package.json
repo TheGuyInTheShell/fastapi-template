@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "apexcharts": "^3.49.1",
+        "htmx.org": "^2.0.8",
         "mermaid": "^10.9.5",
         "yup": "^1.4.0"
     }

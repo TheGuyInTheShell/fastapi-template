@@ -1,0 +1,41 @@
+{% if success %}
+<div class="alert alert-success mb-4">
+    <span>Role updated successfully!</span>
+</div>
+<script>
+    setTimeout(() => window.location.reload(), 1000);
+</script>
+{% elif success == False %}
+<div class="alert alert-error mb-4">
+    <span>Error: {{ detail }}</span>
+</div>
+{% endif %}
+
+<h3 class="font-bold text-lg mb-4">Edit Role</h3>
+
+<form hx-post="/admin/roles/partial/edit/{{ role.uid }}" hx-target="#modal-content" hx-swap="innerHTML">
+    <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text">Name</span>
+        </label>
+        <input type="text" name="name" value="{{ role.name }}" class="input input-bordered" required />
+    </div>
+
+    <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text">Description</span>
+        </label>
+        <textarea name="description" class="textarea textarea-bordered" required>{{ role.description }}</textarea>
+    </div>
+
+    <div class="form-control mb-4">
+        <label class="label">
+            <span class="label-text">Level</span>
+        </label>
+        <input type="number" name="level" value="{{ role.level }}" class="input input-bordered" required />
+    </div>
+
+    <div class="form-control mt-6">
+        <button type="submit" class="btn btn-primary">Update Role</button>
+    </div>
+</form>

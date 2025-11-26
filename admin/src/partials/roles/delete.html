@@ -1,0 +1,7 @@
+{% if success %}
+<!-- Role deleted successfully, this will be swapped out -->
+{% else %}
+<div class="alert alert-error">
+    <span>Error deleting role: {{ detail }}</span>
+</div>
+{% endif %}
