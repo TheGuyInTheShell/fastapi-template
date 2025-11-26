@@ -159,9 +159,19 @@ class BaseAsync(DeclarativeBase):
         if result.is_deleted:
             raise ValueError(f'The register {cls.__tablename__} is deleted')
         return result
+
+    @classmethod
+    async def find_all(cls, db: AsyncSession, status: Literal["deleted", "exists", "all"] = 'all', filters: dict = dict() ) -> List[Self]:
+        base_query =  select(cls).filter_by(**filters)
+        if status == 'deleted':
+            base_query = cls.get_deleted().select().filter_by(**filters)
+        if status == 'exists':
+            base_query = cls.get_exists().select().filter_by(**filters)
+        result = (await db.execute(base_query)).all()
+        return result
     
     @classmethod
-    async def find_some(cls, db: AsyncSession, pag: int = 1, ord: str = 'asc', status: Literal["deleted", "exists", "all"] = 'all', filters: Set[ColumnElement] = ()) -> List[Self]:
+    async def find_some(cls, db: AsyncSession, pag: int = 1, ord: str = 'asc', status: Literal["deleted", "exists", "all"] = 'all', filters: dict = dict() ) -> List[Self]:
         base_query =  select(cls).filter_by(**filters)
         if status == 'deleted':
             base_query = cls.get_deleted().select().filter_by(**filters)

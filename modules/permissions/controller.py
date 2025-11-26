@@ -52,6 +52,26 @@ async def get_Permissions(pag: Optional[int] = 1,
         print(e)
         raise e
 
+@router.get('/all', response_model=RSPermissionList, status_code=200, tags=[tag])
+async def get_all_Permissions(status: Literal["deleted", "exists", "all"] = "exists", db: AsyncSession = Depends(get_async_db)) -> RSPermissionList:
+    try:
+        result = await Permission.find_all(db, status)
+        result = map(lambda x: RSPermission(
+                 uid=x.uid,
+                 action=x.action,
+                 description=x.description,
+                 name=x.name,
+                 type=x.type,
+             ), result)
+        result = list(result)
+        return RSPermissionList(
+            data=result,
+            total=len(result),      
+        )
+    except Exception as e:
+        print(e)
+        raise e
+
 
 @router.post('/', response_model=RSPermission, status_code=201, tags=[tag])
 async def create_Permission(permission: RQPermission, db: AsyncSession = Depends(get_async_db)) -> RSPermission:

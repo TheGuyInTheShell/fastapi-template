@@ -19,10 +19,11 @@ class RSPermission(BaseModel):
 class RSPermissionList(BaseModel):
     data: list[RSPermission] | List = []
     total: int = 0
-    page: int = 0
-    page_size: int = 0
-    total_pages: int = 0
-    has_next: bool = False
-    has_prev: bool = False
-    next_page: int = 0
-    prev_page: int = 0
+    page: int | None = 0
+    page_size: int | None = 0
+    total_pages: int | None = 0
+    has_next: bool | None = False
+    has_prev: bool | None = False
+    next_page: int | None = 0
+    prev_page: int | None = 0
+

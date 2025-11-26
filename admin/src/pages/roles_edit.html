@@ -1,0 +1,93 @@
+{% extends '/layouts/panel.html' %}
+
+{% block title %}Edit Role{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="flex items-center mb-6">
+        <a href="/admin/roles" class="btn btn-ghost btn-sm mr-4">
+            ← Back to Roles
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800">Edit Role</h1>
+    </div>
+
+    {% if success %}
+    <div class="alert alert-success mb-4">
+        <span>Role updated successfully!</span>
+    </div>
+    <script>
+        setTimeout(() => window.location.href = '/admin/roles', 1500);
+    </script>
+    {% elif success == False %}
+    <div class="alert alert-error mb-4">
+        <span>Error: {{ detail }}</span>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" action="/admin/roles/edit/{{ role.uid }}">
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Role Name *</span>
+                </label>
+                <input type="text" name="name" value="{{ role.name }}" class="input input-bordered w-full" required />
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Description *</span>
+                </label>
+                <textarea name="description" class="textarea textarea-bordered w-full h-24"
+                    required>{{ role.description }}</textarea>
+            </div>
+
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text font-semibold">Level *</span>
+                </label>
+                <input type="number" name="level" value="{{ role.level }}" class="input input-bordered w-full" min="0"
+                    required />
+                <label class="label">
+                    <span class="label-text-alt">Higher levels have more privileges</span>
+                </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text font-semibold">Permissions</span>
+                </label>
+                <div class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                    {% if all_permissions %}
+                    <div class="grid grid-cols-1 gap-2">
+                        {% for permission in all_permissions %}
+                        <label class="flex items-center gap-3 p-3 hover:bg-gray-100 rounded cursor-pointer">
+                            <input type="checkbox" name="permissions" value="{{ permission.uid }}"
+                                class="checkbox checkbox-primary" {% if permission.uid in role_permission_uids
+                                %}checked{% endif %} />
+                            <div class="flex-1">
+                                <div class="font-semibold">{{ permission.name }}</div>
+                                <div class="text-sm text-gray-600">
+                                    <span class="badge badge-outline badge-sm mr-2">{{ permission.action }}</span>
+                                    {{ permission.description }}
+                                </div>
+                            </div>
+                            <span class="badge badge-primary badge-sm">{{ permission.type }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-center py-4">No permissions available</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                <a href="/admin/roles" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

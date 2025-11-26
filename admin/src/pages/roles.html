@@ -6,10 +6,9 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Roles Management</h1>
-        <button class="btn btn-primary" hx-get="/admin/roles/partial/create" hx-target="#modal-content"
-            hx-swap="innerHTML" onclick="modal.showModal()">
+        <a href="/admin/roles/create" class="btn btn-primary">
             + Create Role
-        </button>
+        </a>
     </div>
 
     <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -32,14 +31,9 @@
                     <td><span class="badge badge-outline">{{ role.permissions|length }} permissions</span></td>
                     <td>
                         <div class="flex gap-2">
-                            <button class="btn btn-sm btn-info" hx-get="/admin/roles/partial/permissions/{{ role.uid }}"
-                                hx-target="#modal-content" hx-swap="innerHTML" onclick="modal.showModal()">
-                                Permissions
-                            </button>
-                            <button class="btn btn-sm btn-warning" hx-get="/admin/roles/partial/edit/{{ role.uid }}"
-                                hx-target="#modal-content" hx-swap="innerHTML" onclick="modal.showModal()">
+                            <a href="/admin/roles/edit/{{ role.uid }}" class="btn btn-sm btn-warning">
                                 Edit
-                            </button>
+                            </a>
                             <button class="btn btn-sm btn-error" hx-delete="/admin/roles/partial/delete/{{ role.uid }}"
                                 hx-confirm="Are you sure you want to delete this role?" hx-target="closest tr"
                                 hx-swap="outerHTML">
@@ -53,20 +47,6 @@
         </table>
     </div>
 </div>
-
-<!-- Modal -->
-<dialog id="modal" class="modal">
-    <div class="modal-box w-11/12 max-w-5xl">
-        <div id="modal-content">
-            <!-- Content loaded via HTMX -->
-        </div>
-        <div class="modal-action">
-            <form method="dialog">
-                <button class="btn">Close</button>
-            </form>
-        </div>
-    </div>
-</dialog>
 
 <script src="/node_modules/htmx.org/dist/htmx.min.js"></script>
 {% endblock %}
