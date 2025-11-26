@@ -40,7 +40,26 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
             },
             expires_time=expires_time,
         )
-        return {"access_token": access_token, "token_type": "bearer"}
+        
+        # Import Response to set cookies
+        from fastapi.responses import JSONResponse
+        
+        # Create response with JWT in body
+        response = JSONResponse(
+            content={"access_token": access_token, "token_type": "bearer"}
+        )
+        
+        # Set JWT in HTTP-only cookie for browser access
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            max_age=expires_time,
+            samesite="lax",
+            # secure=True,  # Uncomment in production with HTTPS
+        )
+        
+        return response
     except ValueError as e:
         print(e)
         raise e

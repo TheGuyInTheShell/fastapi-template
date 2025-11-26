@@ -74,7 +74,7 @@ class InitTemplate:
                 )
                 return response
 
-    def add_all(self):
+    def add_all(self) -> APIRouter:
         self.add_page()
         self.add_partials()
         return self.router

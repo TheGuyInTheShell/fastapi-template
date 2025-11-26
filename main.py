@@ -17,6 +17,7 @@ from core.database.async_connection import SessionAsync
 from core.database.base import BaseAsync, BaseSync
 from core.database.sync_connection import engineSync
 from core.routes import api_router
+from core.init_owner import initialize_owner
 from modules.permissions.services import create_permissions_api
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -57,6 +58,7 @@ BaseSync.metadata.create_all(engineSync)
 BaseAsync.metadata.create_all(engineSync)
 
 asyncio.ensure_future(create_permissions_api(app.routes, SessionAsync))
+asyncio.ensure_future(initialize_owner(SessionAsync))
 
 
 all_declared_classes = BaseAsync.metadata.tables
