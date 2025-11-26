@@ -77,16 +77,3 @@ async def update_token(
         print(e)
         raise e
 
-
-# ----------------------------------------------------- #
-module_names = [f for f in os.listdir("modules/vehicles")]
-
-for module_name in module_names:
-    try:
-        if module_name.find(".py") != -1 or module_name.find("pycache") != -1:
-            continue
-        module = import_module(f"modules.tokens.{module_name}.controller")
-        router.include_router(module.router, prefix=f"/{module_name}")
-    except Exception as e:
-        print(f"Error importing module {module_name}: {e}")
-        continue

@@ -1,0 +1,47 @@
+{% extends '/layouts/panel.html' %}
+
+{% block title %}Models Diagram{% endblock %}
+
+{% block extra_head %}
+<script type="module" src="/node_modules/mermaid/dist/mermaid.esm.min.mjs"></script>
+{% endblock %}
+
+{% block content %}
+
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold mb-6 text-gray-800">Database Models - Entity Relationship Diagram</h1>
+
+            <div class="bg-gray-100 rounded-lg p-6 overflow-x-auto">
+                <div id="mermaid-diagram" class="flex justify-center w-full h-full">
+                    <pre class="mermaid w-full h-full">
+{{ diagram_syntax }}
+                    </pre>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <a href="/admin/sign-in"
+                    class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition duration-150">
+                    ← Back to Admin
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import mermaid from '/node_modules/mermaid/dist/mermaid.esm.min.mjs';
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            er: {
+                layoutDirection: 'TB',
+                useMaxWidth: true
+            }
+        });
+    </script>
+</body>
+{% endblock %}
