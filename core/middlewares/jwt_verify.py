@@ -1,10 +1,8 @@
 from fastapi import HTTPException, Request, status
-
-from modules.auth.schemas import RSUser
-from modules.auth.services import decode_token
+from modules.auth.services import decode_token, TokenData
 
 
-async def JWT_VERIFY(jwt: str) -> RSUser:
+async def JWT_VERIFY(jwt: str) -> TokenData:
     try:
         if not jwt:
             raise ValueError("JWT not found")

@@ -7,12 +7,12 @@ from sqlalchemy.future import select
 from modules.roles.models import Role
 from modules.permissions.models import Permission
 from modules.users.models import User
-from modules.users.schemas import RSUser
+from modules.users.schemas import RSUserTokenData
 from core.database.async_connection import SessionAsync
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 
-async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
+async def ROLE_VERIFY_COOKIE(request: Request) -> RSUserTokenData:
     try:
         # Get access token from cookies
         access_token = request.cookies.get("access_token")
@@ -50,10 +50,22 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         # Check if permission exists and user has it
         if not permission_require:
             # No permission requirement found for this route - allow access
-            return RSUser(**payload)
+            return RSUserTokenData(
+                uid=payload["id"],
+                username=payload["sub"],
+                email=payload["email"],
+                full_name=payload["full_name"],
+                role=payload["role"],
+            )
         
         if permission_require.uid in permissions_users:
-            return RSUser(**payload)
+            return RSUserTokenData(
+                uid=payload["id"],
+                username=payload["sub"],
+                email=payload["email"],
+                full_name=payload["full_name"],
+                role=payload["role"],
+            )
         else:
             raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
     

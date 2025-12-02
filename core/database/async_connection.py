@@ -20,6 +20,10 @@ def init_async_engine():
             engineAsync = engineAsync = create_async_engine(
             url=f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
             echo = DEBUG,
+            pool_pre_ping = True,
+            pool_size = 10,
+            max_overflow = 20,
+            pool_timeout = 30,
             )
             break
         except KeyboardInterrupt:

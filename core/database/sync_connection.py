@@ -15,7 +15,11 @@ DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 engineSync = create_engine(
     DB_URL, 
     echo=DEBUG, 
-    future=True
+    future=True,
+    pool_pre_ping = True,
+    pool_size = 10,
+    max_overflow = 20,
+    pool_timeout = 30,
 )
 
 SessionSync = sessionmaker(

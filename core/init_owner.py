@@ -15,6 +15,7 @@ load_dotenv()
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 OWNER_USER = os.environ.get("OWNER_USER", "admin")
+OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "admin@admin.com")
 OWNER_PASS = os.environ.get("OWNER_PASS", "admin")
 
 
@@ -85,7 +86,7 @@ async def initialize_owner_user(db: AsyncSession, owner_role_uid: str) -> User:
         owner_user = await User(
             username=OWNER_USER,
             password=hash_context.hash(OWNER_PASS),
-            email=f"{OWNER_USER}@system.local",
+            email=f"{OWNER_EMAIL}",
             full_name="System Owner",
             role_ref=owner_role_uid
         ).save(db)
