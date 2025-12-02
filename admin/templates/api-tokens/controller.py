@@ -15,7 +15,7 @@ class InitTemplate:
 
         @self.router.get("", response_class=HTMLResponse)
         async def main_api_tokens(request: Request, db: SessionAsync = Depends(get_async_db)):
-            roles = await Role.find_all(db)
+            roles: List[Role] = await Role.find_all(db)
             return self.templates.TemplateResponse(
                 "pages/api-tokens.html",
                 context={

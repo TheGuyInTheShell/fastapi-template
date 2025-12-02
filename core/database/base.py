@@ -167,7 +167,7 @@ class BaseAsync(DeclarativeBase):
             base_query = cls.get_deleted().select().filter_by(**filters)
         if status == 'exists':
             base_query = cls.get_exists().select().filter_by(**filters)
-        result = (await db.execute(base_query)).all()
+        result = (await db.execute(base_query)).scalars().all()
         return result
     
     @classmethod
