@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    {% block head %}
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="/static/css/app.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="/static/js/lib/htmx.min.js"></script>
-    <title>{% block title %}{% endblock %}</title>
-    {% block extra_head %}{% endblock %}
-    {% endblock %}
-  </head>
-  <body>
-    {% block page %}{% endblock %}
-    {% block script %}{% endblock %}
-  </body>
+
+<head>
+  {% block head %}
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="/static/css/app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="/node_modules/htmx.org/dist/htmx.min.js"></script>
+  <script src="/node_modules/alpinejs/dist/cdn.min.js"></script>
+  <title>{% block title %}{% endblock %}</title>
+  {% block extra_head %}{% endblock %}
+  {% endblock %}
+</head>
+
+<body>
+  {% block page %}{% endblock %}
+  {% block script %}{% endblock %}
+</body>
+
 </html>
