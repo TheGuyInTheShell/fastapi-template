@@ -1,7 +1,7 @@
 
 from .jwt_verify import JWT_VERIFY
 import asyncio
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.future import select
 from modules.roles.models import Role
@@ -17,11 +17,7 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         # Get access token from cookies
         access_token = request.cookies.get("access_token")
         if not access_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not authenticated - no access token found",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
         
         # Verify JWT and get payload
         db = SessionAsync()
@@ -31,11 +27,7 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         role: Role = await Role.find_one(db, payload["role"])
         if not role:
             await db.close()
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid role",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
         
         permissions_users = role.permissions
         
@@ -63,20 +55,12 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         if permission_require.uid in permissions_users:
             return RSUser(**payload)
         else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"User unauthorized - missing required permission for {route_name}",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
     
     except HTTPException:
         # Re-raise HTTP exceptions as-is
-        raise
+        raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
     except Exception as e:
         # Convert any other exception to 401 Unauthorized
         print(f"Error in ROLE_VERIFY_COOKIE: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Authentication failed: {str(e)}",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
