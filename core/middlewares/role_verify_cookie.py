@@ -17,7 +17,7 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         # Get access token from cookies
         access_token = request.cookies.get("access_token")
         if not access_token:
-            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
+            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
         
         # Verify JWT and get payload
         db = SessionAsync()
@@ -27,7 +27,7 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         role: Role = await Role.find_one(db, payload["role"])
         if not role:
             await db.close()
-            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
+            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
         
         permissions_users = role.permissions
         
@@ -55,12 +55,12 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUser:
         if permission_require.uid in permissions_users:
             return RSUser(**payload)
         else:
-            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
+            raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
     
     except HTTPException:
         # Re-raise HTTP exceptions as-is
-        raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
+        raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
     except Exception as e:
         # Convert any other exception to 401 Unauthorized
         print(f"Error in ROLE_VERIFY_COOKIE: {e}")
-        raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "admin/sign-in"})
+        raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
