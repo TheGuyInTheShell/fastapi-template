@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_async_db
 from modules.roles.models import Role
 from modules.permissions.models import Permission
-
+from core.database import SessionAsync
 
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):

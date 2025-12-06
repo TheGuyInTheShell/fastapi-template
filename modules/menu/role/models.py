@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from core.database.base import BaseAsync
+from core.database import BaseAsync
 from sqlalchemy import ARRAY, String, Integer, Boolean
 from typing import List
 

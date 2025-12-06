@@ -8,7 +8,7 @@ from modules.roles.models import Role
 from modules.permissions.models import Permission
 from modules.users.models import User
 from modules.users.schemas import RSUserTokenData
-from core.database.async_connection import SessionAsync
+from core.database import get_async_db
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 

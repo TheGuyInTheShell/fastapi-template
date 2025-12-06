@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer
 from sqlalchemy.future import select
 
-from core.database.async_connection import SessionAsync
+from core.database import get_async_db
 from modules.auth.controller import oauth2_schema
 from modules.auth.schemas import RSUser
 from modules.permissions.models import Permission

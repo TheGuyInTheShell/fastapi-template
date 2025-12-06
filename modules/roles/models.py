@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy import ARRAY, Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.database.base import BaseAsync
+from core.database import BaseAsync
 
 
 class Role(BaseAsync):

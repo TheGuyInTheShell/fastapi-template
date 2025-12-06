@@ -22,10 +22,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy_utils import create_view, get_mapper
 
-from core.database.async_connection import SessionAsync
-from core.database.sync_connection import SessionSync
+from .async_connection import SessionAsync
+from .sync_connection import SessionSync
 
-from . import get_async_db, get_sync_db
+from .async_connection import engineAsync
+from .sync_connection import engineSync
+
+from .async_connection import get_async_db
+from .sync_connection import get_sync_db
 
 
 def generate_uuid():

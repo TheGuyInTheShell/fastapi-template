@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 from fastapi.templating import Jinja2Templates
 
-from core.database.base import BaseAsync
+from core.database import BaseAsync
 from core.utils.mermaid import generate_mermaid_diagram
 
 

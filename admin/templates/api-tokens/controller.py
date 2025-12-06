@@ -2,9 +2,10 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 from fastapi.templating import Jinja2Templates
-from core.database.async_connection import SessionAsync, get_async_db
+from core.database import get_async_db
 from fastapi import Depends
 from modules.roles.models import Role
+from core.database import SessionAsync
 
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
