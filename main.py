@@ -60,17 +60,17 @@ init_sockets_events(sio=sio, app=app)
 app.mount("/public", StaticFiles(directory="public"))
 
 
-# Monta el directorio de node_modules para librerías de npm
+# Node modules
 
 app.mount("/node_modules", StaticFiles(directory="node_modules"), name="node_modules")
 
 
-# Monta el directorio de archivos estáticos
+# Static files
 
 app.mount("/static", StaticFiles(directory="admin/static"), name="admin")
 
 
-# Configura Jinja2 para usar el directorio de plantillas
+# Jinja2 templates for admin panel
 
 templates = Jinja2Templates(directory="admin/src")
 
@@ -79,13 +79,19 @@ init_admin(templates, app)
 app.include_router(api_router)
 
 
+# Prometheus
+
 Instrumentator().instrument(app).expose(app)
 
+
+# Database initialization models
 
 BaseSync.metadata.create_all(engineSync)
 
 BaseAsync.metadata.create_all(engineSync)
 
+
+# Database initialization permissions and owner
 
 asyncio.ensure_future(create_permissions_api(app.routes, SessionAsync))
 

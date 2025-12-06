@@ -7,13 +7,16 @@ from modules.auth.controller import oauth2_schema
 from modules.auth.schemas import RSUser
 from modules.permissions.models import Permission
 from modules.roles.models import Role
+from core.database import SessionAsync
 import asyncio
 
 from .jwt_verify import JWT_VERIFY
 
 
-async def ROLE_VERIFY(request: Request, token: str = Depends(oauth2_schema)) -> RSUser:
+async def ROLE_VERIFY(request: Request, token: str = Depends(oauth2_schema), omit_routes: list = []) -> RSUser:
     try:
+        if request.scope["route"].name in omit_routes:
+            return True
         db = SessionAsync()
         payload = await JWT_VERIFY(token)
         role: Role = await Role.find_one(db, payload["role"])
