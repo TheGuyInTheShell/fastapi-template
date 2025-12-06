@@ -11,7 +11,7 @@ api_router = APIRouter()
 
 @api_router.get("/check", dependencies=[])
 def response():
-    channel.emit("test", "args")
+    channel.emit_to("test").with_args("test")
     return {"result": "Ok!"}
 
 import_modules(api_router)

@@ -4,7 +4,7 @@ from fastapi_socketio import SocketManager
 
 from modules.auth.services import decode_token
 
-DEBUG = True if os.getenv("MODE") == "DEBUG" else False
+DEBUG = True if os.getenv("MODE") == "DEVELOPMENT" else False
 
 async def JWT_VERIFY_SOCKET(jwt: str):
     try:
