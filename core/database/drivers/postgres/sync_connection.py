@@ -8,7 +8,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
-DEBUG = True if os.getenv("DEBUG") == "DEBUG" else False
+DEBUG = True if os.getenv("DEBUG") == "DEVELOPMENT" else False
 DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Create Database Engine

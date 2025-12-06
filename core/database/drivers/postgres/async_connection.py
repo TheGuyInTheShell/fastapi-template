@@ -8,7 +8,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
-DEBUG = True if os.getenv("MODE") == "DEBUG" else False
+DEBUG = True if os.getenv("MODE") == "DEVELOPMENT" else False
 
 # SQLALCHEMY 
 engineAsync = None

@@ -13,6 +13,11 @@ from fastapi.routing import APIRouter
 
 from core.middlewares.role_verify_cookie import ROLE_VERIFY_COOKIE
 
+import os
+import dotenv
+dotenv.load_dotenv()
+mode = os.getenv("MODE")
+
 def init_admin(templates: Jinja2Templates, app: FastAPI):
 
 
@@ -44,7 +49,7 @@ def init_admin(templates: Jinja2Templates, app: FastAPI):
 
             # Apply dependencies when including the router, not after
 
-            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" else []
+            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" or mode == "DEVELOPMENT" else []
 
             app.include_router(
 
