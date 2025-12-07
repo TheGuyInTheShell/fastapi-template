@@ -16,6 +16,14 @@ TAction = Literal["before", "after"]
 
 def type_verify(args_types, kwargs_types, args, kwargs):
 
+    if len(args_types) != len(args):
+
+        raise ValueError("Number of arguments does not match")
+
+    if len(kwargs_types) != len(kwargs):
+
+        raise ValueError("Number of keyword arguments does not match")
+
     for arg, arg_type in zip(args, args_types):
 
         if not isinstance(arg, arg_type):
@@ -23,7 +31,6 @@ def type_verify(args_types, kwargs_types, args, kwargs):
             raise TypeError(f"Argument {arg} is not of type {arg_type}")
 
     for key, value in kwargs.items():
-
         if not isinstance(value, kwargs_types[key]):
 
             raise TypeError(f"Argument {key} is not of type {kwargs_types[key]}")
@@ -135,7 +142,7 @@ class ChannelEvent:
         return cls.instances
     
 
-    async def _call_listeners(self, listeners: Set[Callable], *args, **kwargs):
+    async def _call_listeners(self, listeners: Set[Callable], args: Tuple, kwargs: Dict):
         for listener in listeners:
 
             await listener(*args, **kwargs) if iscoroutinefunction(listener) else listener(*args, **kwargs)
@@ -146,11 +153,11 @@ class ChannelEvent:
 
         result = None
 
-        await self._call_listeners(listeners=event._before_listeners, *args, **kwargs)
+        await self._call_listeners(listeners=event._before_listeners, args=args, kwargs=kwargs)
 
         result = await func(*args, **kwargs) if iscoroutinefunction(func) else func(*args, **kwargs)
         kwargs.update({"result": result})
-        await self._call_listeners(listeners=event._after_listeners, *args, **kwargs)
+        await self._call_listeners(listeners=event._after_listeners, args=args, kwargs=kwargs)
         return result
     
 
@@ -248,12 +255,25 @@ class ChannelEvent:
 
     def with_args(self, *args, **kwargs) -> Event:
 
-        event: Event = self.events.get(self.event_target)
+        try:
 
-        self.event_args = args
+            event: Event = self.events.get(self.event_target)
 
-        self.events_kwargs = kwargs
-        return event
+            self.event_args = args
+
+            self.events_kwargs = kwargs
+            return event
+
+        except Exception as e:
+            raise e
+
+        finally:
+            # Emit the event
+            loop = asyncio.get_event_loop()
+            loop.create_task(self._iterator(self.events.get(self.event_target), lambda *args, **kwargs: None, *self.event_args, **self.events_kwargs))
+            self.event_args = []
+            self.events_kwargs = {}
+            self.event_target = ""
 
 
     def emit_to(self, event_key: str):
@@ -281,26 +301,27 @@ class ChannelEvent:
         except Exception as e:
             raise e
 
-        finally:
-
-            self._iterator(self.events.get(self.event_target), lambda *args, **kwargs: None, *self.event_args, **self.events_kwargs)
 
 
 
 
-async def test():
 
-    channel = ChannelEvent()
+if __name__ == "__main__":
 
-    @channel.listen_to("test")(int, int)
-    async def test_func(a, b):
+    async def test():
 
-        return a + b
+        channel = ChannelEvent()
 
-    channel.subscribe_to("test", "before", lambda *args, **kwargs: print(args, kwargs))
+        @channel.listen_to("test")(int, int, c=int, d=int)
+        async def test_func(a, b, c, d):
 
-    await test_func(1, 2) 
+            return a + b + c + d
+
+        channel.subscribe_to("test", "after", lambda *args, **kwargs: print(args, kwargs))
+
+        await test_func(1, 2, c=1, d=2)
+
+        channel.emit_to("test").with_args(1, 2)
 
 
-
-asyncio.run(test())
+    asyncio.run(test())
