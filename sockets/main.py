@@ -17,7 +17,7 @@ def init_sockets(app: FastAPI):
         namespaces.append(f"/{module_name}")
  
 
-    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*", path="/sio", namespaces=namespaces, logger=True, engineio_logger=True, allow_upgrades=True)
+    sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[], path="/sio", namespaces=namespaces, logger=True, engineio_logger=True, allow_upgrades=True)
 
     for module_name in module_names:
 

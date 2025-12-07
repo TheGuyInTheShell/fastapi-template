@@ -24,7 +24,6 @@ def socket_config(sio: AsyncServer, app: FastAPI, module_name: str):
 
         @sio.on("connect", namespace=namespace)
         async def on_connect(sid, environ, auth):
-            print(f"Client {sid} connected to {namespace}")
             result = await handler(sid, environ, auth)
             if result:
                 await sio.emit(
