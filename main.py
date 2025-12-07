@@ -1,11 +1,10 @@
 from dotenv import load_dotenv
 
+import asyncio
 
-from sockets.main import init_sockets_events
-
+from sockets.main import init_sockets
 
 load_dotenv()
-import asyncio
 
 
 import socketio
@@ -45,16 +44,8 @@ app = jobs.set_jobs(app)
 
 # Socket io (sio) create a Socket.IO server
 
-sio = socketio.AsyncServer(cors_allowed_origins=[], async_mode="asgi")
-
-
-socket_app = socketio.ASGIApp(sio)
-
-
-app.mount(f"/sio/", socket_app)
-
-
-init_sockets_events(sio=sio, app=app)
+socket_app = init_sockets(app)
+app.mount("/sio", socket_app)
 
 
 app.mount("/public", StaticFiles(directory="public"))

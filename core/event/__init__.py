@@ -118,28 +118,18 @@ class ChannelEvent(ABCChannelEvent):
 
 
     def subscribe_to(self, event_key: str, action: "TAction" = "before", handler: Union[Callable[..., Any], Callable[..., Awaitable]] = None) -> Callable[..., Any]:
-        
-
 
         """
         
-
-
         subscribe to an event
 
-
-
         """
         
 
-
         def decorator(handler: Union[Callable[..., Any], Callable[..., Awaitable]]) -> any:
-            
-
 
             event: Event = self.events.get(event_key)
     
-
             # If event not found create it
 
             if event is None:

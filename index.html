@@ -1,38 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <img id="frame"></img>
-<script type="module">
-    import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
-    
-    const socket = io("ws://localhost:8000", {
-        path: "/sio/socket.io",
-        auth: {
-            "key": "val"
+    <script type="module">
+        import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+
+        try {
+            const socket = io("http://localhost:8000/live", {
+                path: "/sio/",
+                auth: {
+                    "key": "val"
+                }
+            });
+
+            socket.on("connect", () => {
+                console.log("Connected to Socket.IO server!");
+                console.log("Socket ID:", socket.id);
+            });
+
+            socket.on("connect_info", (data) => {
+                console.log("Connect info received:", data);
+            });
+
+
+            socket.on("sv:live:0", (msg) => {
+                let array = new Uint8ClampedArray(msg);
+                let url = URL.createObjectURL(new Blob([msg], { type: 'image/jpg' }));
+
+                let img = document.querySelector('#frame');
+                img.src = url;
+            })
+
+            socket.on("test2", (msg) => console.log("Test2 event:", msg))
+
+        } catch (error) {
+            console.log(error);
         }
-    });
-
-    socket.on("connect", (msg) => {
-        console.log(msg)
-    });
-
-    
-    socket.on("sv:live:0", (msg)=>{
-        let array = new Uint8ClampedArray(msg);
-        let url = URL.createObjectURL(new Blob([msg], {type: 'image/jpg'})); // Ajusta el tipo según sea necesario
-        
-        let img = document.querySelector('#frame');
-        img.src = url;
-    })
-
-    //socket.on("test2", (msg)=> console.log(msg))
 
 
-</script>
+    </script>
 </body>
+
 </html>

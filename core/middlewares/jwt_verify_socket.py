@@ -1,6 +1,6 @@
 from typing import Dict, Tuple
 import os
-from fastapi_socketio import SocketManager
+from socketio import AsyncServer
 
 from modules.auth.services import decode_token
 
@@ -22,16 +22,16 @@ async def JWT_VERIFY_SOCKET(jwt: str):
         return False
     
 
-def wrap_init_connect(sio: SocketManager):
+def wrap_init_connect(sio: AsyncServer):
     async def init_connect(sid: str, _, auth: Dict[str, str]):
-        jwt = getattr(auth, "auth")
+        jwt = auth.get("auth")
 
         try:
             if DEBUG:
                 print("JWT: ", jwt)
                 return True
 
-            if not auth:
+            if not jwt:
                 return False
             
             is_auth = await JWT_VERIFY_SOCKET(jwt)
