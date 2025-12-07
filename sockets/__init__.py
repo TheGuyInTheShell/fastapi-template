@@ -27,13 +27,13 @@ def init_sockets(app: FastAPI):
 
                 module = import_module(f"sockets.{module_name}.events")
 
-                print(f"Importing socket module: {module_name}")
+                print(f"Importing SOCKET module: {module_name}")
 
                 module.socket_config(sio, app, module_name)
 
             except Exception as e:
 
-                print(f"Error importing module {module_name}: {e}")
+                print(f"Error importing SOCKET module {module_name}: {e}")
                 continue
 
     socketio_app = socketio.ASGIApp(sio, other_asgi_app=app, socketio_path="/sio/")

@@ -15,5 +15,7 @@ def import_modules(router: APIRouter, base_path: str = "modules", prefix: str = 
                 prefix=route_prefix, 
                 dependencies=[ Depends(ROLE_VERIFY()) ] if module_name != "auth" else [] 
                 )
+
+                print(f"Importing API module: {module_name}")
             except Exception as e:
-                print(f"Error importing module {module_name}: {e}")
+                print(f"Error importing API module {module_name}: {e}")

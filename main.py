@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 
 import asyncio
 
-from sockets.main import init_sockets
+from sockets import init_sockets
 
 load_dotenv()
 
@@ -25,7 +25,7 @@ from core.database import BaseAsync, BaseSync, SessionAsync, engineSync, get_asy
 
 from core.routes import api_router
 
-from core.init_owner import initialize_owner
+from core.services.init_owner import initialize_owner
 
 from modules.permissions.services import create_permissions_api
 
@@ -88,11 +88,4 @@ asyncio.ensure_future(create_permissions_api(app.routes, SessionAsync))
 
 asyncio.ensure_future(initialize_owner(SessionAsync))
 
-
-
-all_declared_classes = BaseAsync.metadata.tables
-
-
-for class_ in all_declared_classes:
-    print(class_)
 
