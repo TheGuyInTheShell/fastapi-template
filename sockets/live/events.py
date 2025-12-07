@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi_socketio import SocketManager
 
 
-from core.event.base import ChannelEvent
+from core.event import ChannelEvent
 
 from core.middlewares.jwt_verify_socket import wrap_init_connect
 
@@ -34,11 +34,10 @@ def socket_services(sio: SocketManager, app: FastAPI, module_name: str):
 
         @channel.subscribe_to("test")
 
-        async def test(el):
+        async def test(args):
 
-            args, kargs = el
 
-            print(args, kargs)
+            print(args)
 
             sio.emit("test", "XDDD", namespace=namespace)
 
