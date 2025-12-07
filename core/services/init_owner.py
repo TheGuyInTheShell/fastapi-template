@@ -79,7 +79,7 @@ async def initialize_owner_user(db: AsyncSession, owner_role_uid: str) -> User:
         owner_user = query.scalar_one_or_none()
         
         if owner_user:
-            print(f"✓ Owner user '{OWNER_USER}' already exists")
+            print(f"✓ Owner user already exists")
             return owner_user
         
         # Create owner user
@@ -91,7 +91,7 @@ async def initialize_owner_user(db: AsyncSession, owner_role_uid: str) -> User:
             role_ref=owner_role_uid
         ).save(db)
         
-        print(f"✓ Created owner user '{OWNER_USER}'")
+        print(f"✓ Created owner user")
         return owner_user
         
     except Exception as e:
