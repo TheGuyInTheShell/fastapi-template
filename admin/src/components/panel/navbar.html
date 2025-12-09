@@ -1,0 +1,32 @@
+<div class="navbar bg-base-100 shadow-sm border-b border-base-200">
+    <div class="flex-1">
+        <!-- Branding or Page Title can go here -->
+        <a class="btn btn-ghost text-xl">Admin Panel</a>
+    </div>
+    <div class="flex-none gap-2">
+        <!-- Modular Menu Items Area -->
+        <ul class="menu menu-horizontal px-1 hidden md:flex">
+            <!-- Example Item -->
+            <!-- <li><a>Item 1</a></li> -->
+        </ul>
+
+        <!-- User Dropdown -->
+        <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                <div class="w-10 rounded-full">
+                    <img alt="User Avatar" src="https://ui-avatars.com/api/?name=Admin+User&background=random" />
+                </div>
+            </div>
+            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                <li>
+                    <a class="justify-between">
+                        Profile
+                        <span class="badge">New</span>
+                    </a>
+                </li>
+                <li><a>Settings</a></li>
+                <li><a href="/logout" class="text-error">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
