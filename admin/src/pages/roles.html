@@ -49,4 +49,13 @@
 </div>
 
 <script src="/node_modules/htmx.org/dist/htmx.min.js"></script>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        setTimeout(() => {
+            Alpine.store('menu').changeActivate("roles")
+        }, 100)
+    })
+</script>
+
 {% endblock %}

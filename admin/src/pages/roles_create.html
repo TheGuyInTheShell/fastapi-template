@@ -90,4 +90,12 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        setTimeout(() => {
+            Alpine.store('menu').changeActivate("roles")
+        }, 100)
+    })
+</script>
 {% endblock %}

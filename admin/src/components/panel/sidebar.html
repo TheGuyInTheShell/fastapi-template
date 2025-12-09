@@ -1,4 +1,17 @@
 {% set svgs = 'fill-white' %}
+{% set style_active = 'text-white font-semibold' %}
+{% set style_inactive = 'text-white font-semibold opacity-50 cursor-not-allowed' %}
+<script>
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('menu', {
+            activate: "",
+            changeActivate(activate) {
+                this.activate = activate
+            }
+        })
+    })
+</script>
 <aside class="drawer-side">
     <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
 
@@ -6,7 +19,8 @@
 
         <span class="text-white font-semibold mt-5">CONTENT</span>
         <li class="flex ">
-            <a class="text-white font-semibold" href="/admin/dashboard">
+            <a x-data href="/admin/dashboard"
+                :class="$store.menu.activate == 'dashboard' ? '{{ style_active }}' : '{{ style_inactive }}'">
                 <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                     width="24px" fill="#5f6368">
                     <path
@@ -17,7 +31,8 @@
         </li>
 
         <li class="flex ">
-            <a class="text-white font-semibold opacity-50 cursor-not-allowed" href="/admin/models">
+            <a x-data href="/admin/models"
+                :class="$store.menu.activate == 'models' ? '{{ style_active }}' : '{{ style_inactive }}'">
                 <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                     width="24px" fill="#5f6368">
                     <path
@@ -28,7 +43,8 @@
         </li>
 
         <li class="flex ">
-            <a class="text-white font-semibold opacity-50 cursor-not-allowed" href="#">
+            <a x-data href="/admin/modules"
+                :class="$store.menu.activate == 'modules' ? '{{ style_active }}' : '{{ style_inactive }}'">
                 <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                     width="24px" fill="#5f6368">
                     <path
@@ -41,7 +57,8 @@
 
         <span class="text-white font-semibold mt-5">ADMINITRATION</span>
         <li class="flex ">
-            <a class="text-white font-semibold" href="/admin/api-tokens">
+            <a x-data href="/admin/api-tokens"
+                :class="$store.menu.activate == 'api-tokens' ? '{{ style_active }}' : '{{ style_inactive }}'">
                 <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                     width="24px" fill="#5f6368">
                     <path
@@ -52,7 +69,8 @@
         </li>
 
         <li class="flex ">
-            <a class="text-white font-semibold opacity-50 cursor-not-allowed" href="/admin/roles">
+            <a x-data href="/admin/roles"
+                :class="$store.menu.activate == 'roles' ? '{{ style_active }}' : '{{ style_inactive }}'">
                 <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                     width="24px" fill="#5f6368">
                     <path
@@ -63,7 +81,7 @@
         </li>
 
         <li class="flex ">
-            <a class="text-white font-semibold opacity-50 cursor-not-allowed" href="#">
+            <a x-data href="#" :class="$store.menu.activate == 'users' ? '{{ style_active }}' : '{{ style_inactive }}'">
                 <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                     width="24px" fill="#5f6368">
                     <path

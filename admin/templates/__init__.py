@@ -49,7 +49,7 @@ def init_admin(templates: Jinja2Templates, app: FastAPI):
 
             # Apply dependencies when including the router, not after
 
-            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" or mode == "DEVELOPMENT" else []
+            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" or mode != "DEVELOPMENT" else []
 
             app.include_router(
 

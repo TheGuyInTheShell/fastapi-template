@@ -43,5 +43,13 @@
             }
         });
     </script>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            setTimeout(() => {
+                Alpine.store('menu').changeActivate("models")
+            }, 100)
+        })
+    </script>
 </body>
 {% endblock %}

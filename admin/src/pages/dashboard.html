@@ -7,7 +7,15 @@
 {% endblock %}
 
 {% block content %}
-    <section class="container">
-        {% include '/components/dashboard/graph.html' %}
-    </section>
+<section class="container">
+    {% include '/components/dashboard/graph.html' %}
+</section>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        setTimeout(() => {
+            Alpine.store('menu').changeActivate("dashboard")
+        }, 100)
+    })
+</script>
 {% endblock %}
