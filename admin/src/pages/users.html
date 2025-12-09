@@ -1,0 +1,85 @@
+{% extends '/layouts/panel.html' %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<section class="flex justify-between items-center">
+    <div>
+        <h1 class="font-semibold text-xl">Users</h1>
+    </div>
+</section>
+
+<section class="container mt-10">
+    <div class="overflow-x-auto">
+        <table class="table w-full">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Full Name</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.full_name }}</td>
+                    <td>
+                        {% if user.role %}
+                        <span class="badge badge-primary">{{ user.role.name }}</span>
+                        {% else %}
+                        <span class="badge badge-ghost">No Role</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="container mt-10">
+    <div class="overflow-x-auto">
+        <table class="table w-full">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Full Name</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in deleted_users %}
+                <tr>
+                    <td>{{ deleted_user.id }}</td>
+                    <td>{{ deleted_user.username }}</td>
+                    <td>{{ deleted_user.email }}</td>
+                    <td>{{ deleted_user.full_name }}</td>
+                    <td>
+                        {% if deleted_user.role %}
+                        <span class="badge badge-primary">{{ deleted_user.role.name }}</span>
+                        {% else %}
+                        <span class="badge badge-ghost">No Role</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        setTimeout(() => {
+            Alpine.store('menu').changeActivate("users")
+        }, 100)
+    })
+</script>
+{% endblock %}
