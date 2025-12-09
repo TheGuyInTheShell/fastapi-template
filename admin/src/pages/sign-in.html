@@ -2,7 +2,11 @@
 {% block title %}Sign{% endblock %}
 {% block content %}
 <div class="card w-96 glass p-4">
-  <div id="notification"></div>
+  <div id="notification" class="flex justify-center items-center">
+    <div x-data="spinner" id="spinner" :class="{ hidden: !loading }">
+      <div class="loading loading-spinner"></div>
+    </div>
+  </div>
   <form id="sign-in" hx-post="/admin/sign-in/partial/sign-in" hx-swap="outerHTML" hx-target="#notification">
     <div class="mb-4">
       <label id="label-username" class="text-red-700 text-xs my-2 mr-3"></label>
@@ -32,6 +36,21 @@
 {% block script %}
 <script src="/static/js/lib/validate.min.js"></script>
 <script>
+
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('spinner', () => ({
+      loading: false,
+      show() {
+        this.loading = true;
+      },
+      hide() {
+        this.loading = false;
+      }
+    }))
+  })
+
+  const spinner = document.getElementById('spinner');
+
   /**
    * @param {string} e
    */
@@ -64,7 +83,6 @@
     const data = Object.fromEntries(new FormData(form));
     const validation = validate(data, constraints);
 
-    console.log(validation)
 
     if (!!validation) {
       // STOP the request ONLY if validation fails
@@ -81,6 +99,8 @@
       return false
     }
 
+    Alpine.$data(spinner).show();
+
     // If validation passes, we do nothing. 
     // HTMX will proceed with the request automatically.
     return true
@@ -88,6 +108,7 @@
 
   form.addEventListener('htmx:afterOnLoad', function (event) {
     setTimeout(() => {
+      Alpine.$data(spinner).hide();
       const target = $("#notification");
       if (target && target.classList.contains("success")) {
         setTimeout(() => {

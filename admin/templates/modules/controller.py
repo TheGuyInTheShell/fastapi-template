@@ -31,7 +31,6 @@ class InitTemplate:
                             "methods": methods,
                             "description": description
                         })
-                    print(name, methods, description)
                 except Exception as e:
                     print(e)
                     continue    
