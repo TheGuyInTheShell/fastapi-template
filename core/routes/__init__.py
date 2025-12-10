@@ -21,4 +21,6 @@ async def response():
 
     return {"result": "Ok!"}
 
-import_modules(api_router)
+routes = import_modules(api_router)
+
+

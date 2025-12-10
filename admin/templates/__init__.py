@@ -24,8 +24,10 @@ import os
 import dotenv
 dotenv.load_dotenv()
 mode = os.getenv("MODE")
+from typing import List, Dict, Any
 
-def init_admin(templates: Jinja2Templates, app: FastAPI):
+
+def init_admin(templates: Jinja2Templates, app: FastAPI) -> List[Dict[str, Any]]:
 
 
     @app.get("/favicon.ico")
@@ -38,6 +40,7 @@ def init_admin(templates: Jinja2Templates, app: FastAPI):
 
 
     module_names = [f for f in os.listdir("admin/templates")]
+    routes = []
 
 
     for module_name in module_names:
@@ -76,10 +79,14 @@ def init_admin(templates: Jinja2Templates, app: FastAPI):
             )
 
 
+
         except ValueError as e:
 
             print(f"Error importing module {module_name}: {e}")
             continue
+    
+    return [{
+                "routes": app.routes.copy(),
+                "type": "ADMIN"
+            }]
         
-    asyncio.create_task(create_permissions_api(app.routes, SessionAsync, admin_type))
-

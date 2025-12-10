@@ -21,4 +21,8 @@ def import_modules(router: APIRouter, base_path: str = "modules", prefix: str = 
                 print(f"Importing API module: {module_name}")
             except Exception as e:
                 print(f"Error importing API module {module_name}: {e}")
-    asyncio.create_task(create_permissions_api(router.routes, SessionAsync, "API"))
+
+    return [{
+        "routes": router.routes.copy(),
+        "type": "API"
+    }]

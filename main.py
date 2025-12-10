@@ -23,12 +23,9 @@ from admin.templates import init_admin
 
 from core.database import BaseAsync, BaseSync, SessionAsync, engineSync, get_async_db
 
-from core.routes import api_router
+from core.routes import api_router, routes
 
-from core.services.init_owner import initialize_owner
-from core.services.init_subscriber import initialize_subscriber
-
-from modules.permissions.services import create_permissions_api
+from core.services.init_auth import init_auth
 
 from prometheus_fastapi_instrumentator import Instrumentator
 
@@ -66,7 +63,7 @@ app.mount("/static", StaticFiles(directory="admin/static"), name="admin")
 
 templates = Jinja2Templates(directory="admin/src")
 
-init_admin(templates, app)
+admin_routes = init_admin(templates, app)
 
 app.include_router(api_router)
 
@@ -83,7 +80,6 @@ BaseSync.metadata.create_all(engineSync)
 BaseAsync.metadata.create_all(engineSync)
 
 
-asyncio.ensure_future(initialize_owner(SessionAsync))
-asyncio.ensure_future(initialize_subscriber(SessionAsync))
+asyncio.ensure_future(init_auth([*routes, *admin_routes], SessionAsync))
 
 
