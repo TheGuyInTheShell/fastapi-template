@@ -21,7 +21,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy_utils import create_view, get_mapper
-
+from sqlalchemy import MetaData
 from .async_connection import SessionAsync
 from .sync_connection import SessionSync
 
@@ -175,20 +175,58 @@ class BaseAsync(DeclarativeBase):
         return result
     
     @classmethod
-    async def find_some(cls, db: AsyncSession, pag: int = 1, ord: str = 'asc', status: Literal["deleted", "exists", "all"] = 'all', filters: dict = dict() ) -> List[Self]:
-        base_query =  select(cls).filter_by(**filters)
-        if status == 'deleted':
-            base_query = cls.get_deleted().select().filter_by(**filters)
-        if status == 'exists':
-            base_query = cls.get_exists().select().filter_by(**filters)
+    def get_order_by(cls, order_by: str) -> Column:
+        table = Table(cls.__tablename__, MetaData(), autoload_with=engineSync)
+        return table.c.get(order_by)
 
-        if pag == 0:
+    @classmethod
+    async def find_some(cls, db: AsyncSession, pag: int = 1, order_by: str = None, ord: str = 'asc', status: Literal["deleted", "exists", "all"] = 'all', filters: dict = dict() ) -> List[Self]:
+        
+        # Determine the source and initial query
+        if status == 'deleted':
+            selectable = cls.get_deleted()
+            base_query = selectable.select().filter_by(**filters)
+        elif status == 'exists':
+            selectable = cls.get_exists()
+            base_query = selectable.select().filter_by(**filters)
+        else: # status == 'all'
+            selectable = cls.__table__
+            base_query = select(cls).filter_by(**filters)
+
+        # Determine the order column
+        order_column = None
+        
+        if order_by:
+            if status == 'all':
+                # Try to get from model columns first, then table columns
+                order_column = getattr(cls, order_by, None)
+                if order_column is None:
+                     order_column = selectable.c.get(order_by)
+            else:
+                order_column = selectable.c.get(order_by)
+        
+        # Fallback to id if no order column found
+        if order_column is None:
+            if status == 'all':
+                order_column = cls.id
+            else:
+                order_column = selectable.c.get('id')
+                if order_column is None:
+                    order_column = cls.id
+
+        # Apply ordering
+        if order_column is not None:
+            if ord == "desc":
+                base_query = base_query.order_by(order_column.desc())
+            else: 
+                base_query = base_query.order_by(order_column.asc())
+        
+        # Pagination
+        if pag <= 0:
             pag = 1
-        query = ''
-        if ord == "desc":
-            query = base_query.order_by(desc()).limit(10).offset((pag - 1) * 10)
-        else: 
-            query = base_query.limit(10).offset((pag - 1) * 10)
+            
+        query = base_query.limit(10).offset((pag - 1) * 10)
+        
         result = (await db.execute(query))
         result = result.scalars().all() if status == 'all' else result.all()
         return result if status == 'all' else cls.touple_to_dict(result) 

@@ -29,8 +29,8 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.full_name }}</td>
                     <td>
-                        {% if user.role %}
-                        <span class="badge badge-primary">{{ user.role.name }}</span>
+                        {% if user.role_ref %}
+                        <span class="badge badge-primary">{{ roles_by_id[user.role_ref].name }}</span>
                         {% else %}
                         <span class="badge badge-ghost">No Role</span>
                         {% endif %}
@@ -54,6 +54,7 @@
                     <th>Role</th>
                 </tr>
             </thead>
+            {% if deleted_users %}
             <tbody>
                 {% for user in deleted_users %}
                 <tr>
@@ -62,8 +63,8 @@
                     <td>{{ deleted_user.email }}</td>
                     <td>{{ deleted_user.full_name }}</td>
                     <td>
-                        {% if deleted_user.role %}
-                        <span class="badge badge-primary">{{ deleted_user.role.name }}</span>
+                        {% if deleted_user.role_ref %}
+                        <span class="badge badge-primary">{{ roles_by_id[deleted_user.role_ref].name }}</span>
                         {% else %}
                         <span class="badge badge-ghost">No Role</span>
                         {% endif %}
@@ -71,6 +72,13 @@
                 </tr>
                 {% endfor %}
             </tbody>
+            {% else %}
+            <tbody>
+                <tr>
+                    <td colspan="5" class="text-center">No deleted users</td>
+                </tr>
+            </tbody>
+            {% endif %}
         </table>
     </div>
 </section>
