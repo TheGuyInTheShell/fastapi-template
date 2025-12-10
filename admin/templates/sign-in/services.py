@@ -24,7 +24,7 @@ async def has_permission(db: SessionAsync, role_id: str, route_name: str, method
         if role is None:
             return False
 
-        if permission.id in set(role.permissions):
+        if permission.uid in set(role.permissions):
             return True
 
         return False

@@ -45,6 +45,7 @@ class InitTemplate:
                         status_code=401, detail="Incorrect username or password"
                     )
                 
+
                 if not await has_permission(db, user.role, "admin_sign_in", "POST"):
                     raise HTTPException(
                         status_code=401, detail="You do not have permission to sign in"
