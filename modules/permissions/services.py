@@ -7,13 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .models import Permission
 
 
-async def create_permissions_api(routes: List[BaseRoute], sessionAsync):
+async def create_permissions_api(routes: List[BaseRoute], sessionAsync: AsyncSession, type: str):
         db: AsyncSession = sessionAsync()
         try:
             for route in routes:
                 if isinstance(route, APIRoute):
                     try:
-                        permission = await Permission.find_by_colunm(db, 'name', route.name)
+                        permission = await Permission.find_by_colunm(db, 'name', route.__getattribute__('name'))
                         result = permission.scalar_one_or_none()
                         name: str = route.__getattribute__('name')
                         methods: set = route.__getattribute__('methods')
@@ -22,11 +22,11 @@ async def create_permissions_api(routes: List[BaseRoute], sessionAsync):
                             await Permission(name=name, 
                                              action=next(iter(methods)),
                                              description=description,
-                                             type='API'
+                                             type=type
                                              ).save(db)
                     except Exception as e:
                         print(e)
-                        continue    
+                        continue  
         except Exception as e:
              print(e)
         finally:

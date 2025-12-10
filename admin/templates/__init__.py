@@ -13,6 +13,13 @@ from fastapi.routing import APIRouter
 
 from core.middlewares.role_verify_cookie import ROLE_VERIFY_COOKIE
 
+from modules.permissions.services import create_permissions_api
+
+from modules.permissions.const import admin_type
+
+from core.database import SessionAsync
+
+import asyncio
 import os
 import dotenv
 dotenv.load_dotenv()
@@ -48,8 +55,13 @@ def init_admin(templates: Jinja2Templates, app: FastAPI):
             
 
             # Apply dependencies when including the router, not after
+            # if mode develoment not apply role verify cookie
 
-            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" or mode != "DEVELOPMENT" else []
+            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" else []
+
+            if mode == "DEVELOPMENT":
+                dependencies = []
+
 
             app.include_router(
 
@@ -63,8 +75,11 @@ def init_admin(templates: Jinja2Templates, app: FastAPI):
 
             )
 
+
         except ValueError as e:
 
             print(f"Error importing module {module_name}: {e}")
             continue
+        
+    asyncio.create_task(create_permissions_api(app.routes, SessionAsync, admin_type))
 

@@ -39,7 +39,7 @@ async def assign_permission(
 
 
 @router.post('/remove', response_model=RSRolePermissions, status_code=200, tags=[tag])
-async def remove_permission(
+async def remove_permission_from_role(
     request: RQRemovePermission,
     db: AsyncSession = Depends(get_async_db)
 ) -> RSRolePermissions:

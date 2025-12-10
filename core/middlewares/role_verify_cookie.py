@@ -8,9 +8,9 @@ from modules.roles.models import Role
 from modules.permissions.models import Permission
 from modules.users.models import User
 from modules.users.schemas import RSUserTokenData
+from modules.permissions.const import admin_type
 from core.database import get_async_db, SessionAsync
 from starlette.status import HTTP_401_UNAUTHORIZED
-
 
 async def ROLE_VERIFY_COOKIE(request: Request) -> RSUserTokenData:
     try:
@@ -18,11 +18,14 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUserTokenData:
         access_token = request.cookies.get("access_token")
         if not access_token:
             raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
+
+        print("Access token: ", access_token)
         
         # Verify JWT and get payload
         db = SessionAsync()
         payload = await JWT_VERIFY(access_token)
         
+        print("Payload: ", payload)
         # Get user's role and permissions
         role: Role = await Role.find_one(db, payload["role"])
         if not role:
@@ -40,7 +43,7 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUserTokenData:
                 select(Permission).where(
                     Permission.name == route_name,
                     Permission.action == method,
-                    Permission.type == "PANEL",
+                    Permission.type == admin_type,
                 )
             )
         ).scalar_one_or_none()

@@ -11,7 +11,7 @@ tag = 'menu - roles'
     
 
 @router.get('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
-async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
+async def get_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole.find_one(db, id)
         return result
@@ -21,7 +21,7 @@ async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> R
 
 
 @router.get('/', response_model=RSMenuRoleList, status_code=200, tags=[tag])
-async def get_Permissions(pag: Optional[int] = 1, 
+async def get_menu_roles(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 
                             db: AsyncSession = Depends(get_async_db)
@@ -53,7 +53,7 @@ async def get_Permissions(pag: Optional[int] = 1,
 
 
 @router.post('/', response_model=RSMenuRole, status_code=201, tags=[tag])
-async def create_Permission(menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
+async def create_menu_role(menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole(**menu_role.model_dump()).save(db)
         return result
@@ -63,7 +63,7 @@ async def create_Permission(menu_role: RQMenuRole, db: AsyncSession = Depends(ge
 
 
 @router.delete('id/{id}', status_code=204, tags=[tag])
-async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
+async def delete_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await MenuRole.delete(db, id)
     except Exception as e:
@@ -72,7 +72,7 @@ async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -
 
 
 @router.put('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
-async def update_Permission(id: str, menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
+async def update_menu_role(id: str, menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole.update(db, id, menu_role.model_dump())
         return result

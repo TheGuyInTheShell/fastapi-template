@@ -13,6 +13,7 @@ from modules.auth.schemas import RSUser
 
 from modules.permissions.models import Permission
 from modules.roles.models import Role
+from modules.permissions.const import api_type
 
 from core.database import SessionAsync
 
@@ -51,7 +52,7 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
 
             method = request.method
 
-            permission_require = (await db.execute(select(Permission).where(Permission.name==name, Permission.action==method, Permission.type == 'API'))).scalar_one_or_none()
+            permission_require = (await db.execute(select(Permission).where(Permission.name==name, Permission.action==method, Permission.type == api_type))).scalar_one_or_none()
 
             asyncio.ensure_future(db.close())
 

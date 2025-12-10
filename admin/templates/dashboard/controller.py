@@ -23,7 +23,7 @@ class InitTemplate:
     def add_partials(self):
 
         @self.router.get("/partial/info", response_class=HTMLResponse)
-        async def read_info(request: Request):
+        async def admin_read_info(request: Request):
             return self.templates.TemplateResponse(
                 f"partials/info.html",
                 context={

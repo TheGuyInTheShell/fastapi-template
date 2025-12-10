@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
 from modules.auth.services import authenticade_user, create_token
+from .services import has_permission
 
 
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
         self.templates = templates
         self.router = APIRouter()
+
 
     def add_page(self):
 
@@ -29,7 +31,7 @@ class InitTemplate:
     def add_partials(self):
 
         @self.router.post("/partial/sign-in", response_class=HTMLResponse)
-        async def sign_in(
+        async def admin_sign_in(
             request: Request,
             username: Annotated[str, Form()],
             password: Annotated[str, Form()],
@@ -42,6 +44,12 @@ class InitTemplate:
                     raise HTTPException(
                         status_code=401, detail="Incorrect username or password"
                     )
+                
+                if not await has_permission(db, user.role, "admin_sign_in", "POST"):
+                    raise HTTPException(
+                        status_code=401, detail="You do not have permission to sign in"
+                    )
+
                 expires_time = 1200
                 access_token = create_token(
                     data={

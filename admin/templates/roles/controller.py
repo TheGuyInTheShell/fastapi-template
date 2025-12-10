@@ -45,7 +45,7 @@ class InitTemplate:
             )
 
         @self.router.post("/create", response_class=HTMLResponse)
-        async def create_role(
+        async def admin_create_role(
             request: Request,
             name: Annotated[str, Form()],
             description: Annotated[str, Form()],
@@ -91,7 +91,7 @@ class InitTemplate:
                 )
 
         @self.router.get("/edit/{role_id}", response_class=HTMLResponse)
-        async def edit_role_page(
+        async def admin_edit_role_page(
             request: Request,
             role_id: str,
             db: AsyncSession = Depends(get_async_db),
@@ -116,7 +116,7 @@ class InitTemplate:
                 raise e
 
         @self.router.post("/edit/{role_id}", response_class=HTMLResponse)
-        async def edit_role(
+        async def admin_edit_role(
             request: Request,
             role_id: str,
             name: Annotated[str, Form()],
@@ -174,7 +174,7 @@ class InitTemplate:
     def add_partials(self):
         # Only keep delete partial for HTMX
         @self.router.delete("/partial/delete/{role_id}", response_class=HTMLResponse)
-        async def delete_role(
+        async def admin_delete_role(
             request: Request,
             role_id: str,
             db: AsyncSession = Depends(get_async_db),

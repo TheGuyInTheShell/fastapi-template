@@ -83,10 +83,6 @@ BaseSync.metadata.create_all(engineSync)
 BaseAsync.metadata.create_all(engineSync)
 
 
-# Database initialization permissions and owner
-
-asyncio.ensure_future(create_permissions_api(app.routes, SessionAsync))
-
 asyncio.ensure_future(initialize_owner(SessionAsync))
 asyncio.ensure_future(initialize_subscriber(SessionAsync))
 

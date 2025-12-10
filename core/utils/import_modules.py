@@ -2,6 +2,9 @@ import os
 from importlib import import_module
 from fastapi import APIRouter, Depends
 from core.middlewares.role_verify import ROLE_VERIFY
+import asyncio
+from core.database import SessionAsync
+from modules.permissions.services import create_permissions_api
 
 def import_modules(router: APIRouter, base_path: str = "modules", prefix: str = ""):
     for root, dirs, files in os.walk(base_path):
@@ -15,7 +18,7 @@ def import_modules(router: APIRouter, base_path: str = "modules", prefix: str = 
                 prefix=route_prefix, 
                 dependencies=[ Depends(ROLE_VERIFY()) ] if module_name != "auth" else [] 
                 )
-
                 print(f"Importing API module: {module_name}")
             except Exception as e:
                 print(f"Error importing API module {module_name}: {e}")
+    asyncio.create_task(create_permissions_api(router.routes, SessionAsync, "API"))
