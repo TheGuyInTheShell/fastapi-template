@@ -1,0 +1,83 @@
+{% extends '/layouts/panel.html' %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="flex items-center mb-6">
+        <a href="/admin/users" class="btn btn-ghost btn-sm mr-4">
+            ← Back to Users
+        </a>
+        <h1 class="text-3xl font-bold text-gray-800">Edit User</h1>
+    </div>
+
+    {% if success %}
+    <div class="alert alert-success mb-4">
+        <span>User updated successfully!</span>
+    </div>
+    <script>
+        setTimeout(() => window.location.href = '/admin/users', 1500);
+    </script>
+    {% elif success == False %}
+    <div class="alert alert-error mb-4">
+        <span>Error: {{ detail }}</span>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" action="/admin/users/edit/{{ user.uid }}">
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Username *</span>
+                </label>
+                <input type="text" name="username" value="{{ user.username }}" class="input input-bordered w-full"
+                    required />
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Full Name *</span>
+                </label>
+                <input type="text" name="full_name" value="{{ user.full_name }}" class="input input-bordered w-full"
+                    required />
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Email *</span>
+                </label>
+                <input type="email" name="email" value="{{ user.email }}" class="input input-bordered w-full"
+                    required />
+            </div>
+
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text font-semibold">Role *</span>
+                </label>
+                <select name="role_uid" class="select select-bordered w-full" required>
+                    <option value="" disabled>Select a role</option>
+                    {% for role in roles %}
+                    <option value="{{ role.uid }}" {% if role.uid==user.role_ref %}selected{% endif %}>
+                        {{ role.name }} (Level: {{ role.level }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                <a href="/admin/users" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        setTimeout(() => {
+            Alpine.store('menu').changeActivate("users")
+        }, 100)
+    })
+</script>
+
+{% endblock %}

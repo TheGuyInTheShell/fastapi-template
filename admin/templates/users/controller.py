@@ -1,4 +1,4 @@
-from fastapi import Depends, Request
+from fastapi import Depends, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 from fastapi.templating import Jinja2Templates
@@ -39,6 +39,68 @@ class InitTemplate:
                     "roles_by_id": roles_by_id,
                 },
             )
+
+        @self.router.get("/edit/{uid}", response_class=HTMLResponse)
+        async def get_edit_page(request: Request, uid: str, db: AsyncSession = Depends(get_async_db)):
+            user = await User.find_one(db, uid)
+            roles = await Role.find_all(db)
+            
+            return self.templates.TemplateResponse(
+                "pages/users_edit.html",
+                context={
+                    "request": request,
+                    "user": user,
+                    "roles": roles,
+                    "success": None
+                }
+            )
+
+        @self.router.post("/edit/{uid}", response_class=HTMLResponse)
+        async def post_edit_page(
+            request: Request, 
+            uid: str,
+            username: str = Form(...),
+            full_name: str = Form(...),
+            email: str = Form(...),
+            role_uid: str = Form(...),
+            db: AsyncSession = Depends(get_async_db)
+        ):
+            try:
+                await User.update(db, uid, {
+                    "username": username,
+                    "full_name": full_name,
+                    "email": email,
+                    "role_ref": role_uid
+                })
+                
+                # Fetch updated data to re-render if needed, or just redirect/show success
+                user = await User.find_one(db, uid)
+                roles = await Role.find_all(db)
+                
+                return self.templates.TemplateResponse(
+                    "pages/users_edit.html",
+                    context={
+                        "request": request,
+                        "user": user,
+                        "roles": roles,
+                        "success": True
+                    }
+                )
+            except Exception as e:
+                user = await User.find_one(db, uid)
+                roles = await Role.find_all(db)
+                return self.templates.TemplateResponse(
+                    "pages/users_edit.html",
+                    context={
+                        "request": request,
+                        "user": user,
+                        "roles": roles,
+                        "success": False,
+                        "detail": str(e)
+                    }
+                )
+
+        
 
     def add_all(self):
         self.add_page()

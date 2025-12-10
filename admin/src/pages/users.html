@@ -19,6 +19,7 @@
                     <th>Email</th>
                     <th>Full Name</th>
                     <th>Role</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,8 +36,13 @@
                         <span class="badge badge-ghost">No Role</span>
                         {% endif %}
                     </td>
+                    <td>
+                        <a href="users/edit/{{ user.uid }}" class="btn btn-primary btn-xs">Edit</a>
+                        <a href="users/delete/{{ user.uid }}" class="btn btn-error btn-xs">Delete</a>
+                    </td>
                 </tr>
                 {% endfor %}
+
             </tbody>
         </table>
     </div>
