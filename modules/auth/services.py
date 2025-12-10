@@ -10,6 +10,7 @@ from sqlalchemy import Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from modules.users.models import User
+from core.services.init_subscriber import initialize_subscriber_role
 
 from .schemas import INUser, RQUser, RSUser
 from .types import TokenData
@@ -58,12 +59,13 @@ async def authenticade_user(db: AsyncSession, username: str, password: str) -> R
 
 async def create_user(db: AsyncSession, user_data: RQUser)-> dict | None:
     try:
+        subscriber_role = await initialize_subscriber_role(db)
         user = await User(
             username=user_data.username,
             password=hash_context.hash(user_data.password),
             email=user_data.email,
             full_name=user_data.full_name,
-            role_ref=user_data.role,
+            role_ref=subscriber_role.uid,
             ).save(db)
 
         return {

@@ -10,7 +10,6 @@ class Roles(Enum):
 
 class RQUser(BaseModel):
     username: str
-    role: str
     password: str
     email: EmailStr
     full_name: str

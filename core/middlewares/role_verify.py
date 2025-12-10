@@ -44,7 +44,8 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
             payload = await JWT_VERIFY(token)
 
             role: Role = await Role.find_one(db, payload["role"])
-            permissions_users = role.permissions
+            
+            permissions_users = set(role.permissions)
 
             name, = request.scope["route"].name,
 

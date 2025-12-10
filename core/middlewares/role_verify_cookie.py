@@ -29,7 +29,7 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUserTokenData:
             await db.close()
             raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
         
-        permissions_users = role.permissions
+        permissions_users = set(role.permissions)
         
         # Get required permission for this route
         route_name = request.scope["route"].name

@@ -26,6 +26,7 @@ from core.database import BaseAsync, BaseSync, SessionAsync, engineSync, get_asy
 from core.routes import api_router
 
 from core.services.init_owner import initialize_owner
+from core.services.init_subscriber import initialize_subscriber
 
 from modules.permissions.services import create_permissions_api
 
@@ -87,5 +88,6 @@ BaseAsync.metadata.create_all(engineSync)
 asyncio.ensure_future(create_permissions_api(app.routes, SessionAsync))
 
 asyncio.ensure_future(initialize_owner(SessionAsync))
+asyncio.ensure_future(initialize_subscriber(SessionAsync))
 
 
