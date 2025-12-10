@@ -49,7 +49,7 @@ async def initialize_owner_role(db: AsyncSession) -> Role:
         owner_role = await Role(
             name="owner",
             description="Owner role with full system access",
-            level=0,
+            level=100,
             permissions=permission_uids,
             disabled=False
         ).save(db)

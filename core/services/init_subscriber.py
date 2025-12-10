@@ -24,7 +24,7 @@ async def initialize_subscriber_role(db: AsyncSession) -> Role:
         subscriber_role = await Role(
             name="subscriber",
             description="Subscriber role with limited access",
-            level=100,
+            level=0,
             permissions=[],
             disabled=False
         ).save(db)

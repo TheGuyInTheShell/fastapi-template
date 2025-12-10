@@ -18,14 +18,11 @@ async def ROLE_VERIFY_COOKIE(request: Request) -> RSUserTokenData:
         access_token = request.cookies.get("access_token")
         if not access_token:
             raise HTTPException(status_code=status.HTTP_302_FOUND, detail="Invalid role", headers={"Location": "/admin/sign-in"})
-
-        print("Access token: ", access_token)
         
         # Verify JWT and get payload
         db = SessionAsync()
         payload = await JWT_VERIFY(access_token)
         
-        print("Payload: ", payload)
         # Get user's role and permissions
         role: Role = await Role.find_one(db, payload["role"])
         if not role:
