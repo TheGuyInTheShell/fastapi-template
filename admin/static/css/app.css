@@ -2102,6 +2102,10 @@ html {
   margin-inline-start: -1px;
 }
 
+.join-item:focus {
+  isolation: isolate;
+}
+
 .link:focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -3273,6 +3277,10 @@ html:has(.drawer-toggle:checked) {
 
 .duration-150 {
   transition-duration: 150ms;
+}
+
+.container {
+  max-width: 100% !important;
 }
 
 @media (min-width: 768px) {

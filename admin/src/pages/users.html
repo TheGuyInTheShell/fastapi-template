@@ -42,46 +42,24 @@
     </div>
 </section>
 
-<section class="container mt-10">
-    <div class="overflow-x-auto">
-        <table class="table w-full">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Full Name</th>
-                    <th>Role</th>
-                </tr>
-            </thead>
-            {% if deleted_users %}
-            <tbody>
-                {% for user in deleted_users %}
-                <tr>
-                    <td>{{ deleted_user.id }}</td>
-                    <td>{{ deleted_user.username }}</td>
-                    <td>{{ deleted_user.email }}</td>
-                    <td>{{ deleted_user.full_name }}</td>
-                    <td>
-                        {% if deleted_user.role_ref %}
-                        <span class="badge badge-primary">{{ roles_by_id[deleted_user.role_ref].name }}</span>
-                        {% else %}
-                        <span class="badge badge-ghost">No Role</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            {% else %}
-            <tbody>
-                <tr>
-                    <td colspan="5" class="text-center">No deleted users</td>
-                </tr>
-            </tbody>
-            {% endif %}
-        </table>
+<section class="container mt-5 flex justify-end">
+    <div class="join">
+        {% if pag > 1 %}
+        <a href="?pag={{ pag - 1 }}&ord={{ ord }}" class="join-item btn">«</a>
+        {% else %}
+        <button class="join-item btn btn-disabled">«</button>
+        {% endif %}
+
+        <button class="join-item btn">Page {{ pag }}</button>
+
+        {% if users|length == 10 %}
+        <a href="?pag={{ pag + 1 }}&ord={{ ord }}" class="join-item btn">»</a>
+        {% else %}
+        <button class="join-item btn btn-disabled">»</button>
+        {% endif %}
     </div>
 </section>
+
 
 <script>
     document.addEventListener('alpine:init', () => {

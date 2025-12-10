@@ -14,11 +14,10 @@ class InitTemplate:
 
     def add_page(self):
         @self.router.get("", response_class=HTMLResponse)
-        async def users_page(request: Request, pag: int = 1, ord: str = "desc", db: AsyncSession = Depends(get_async_db)):
+        async def users_page(request: Request, ord_by: str = "id", pag: int = 1, ord: str = "desc", db: AsyncSession = Depends(get_async_db)):
 
             # Get all users with roles
             users = await User.find_some(db, status="exists", pag=pag, ord=ord)
-            deleted_users = await User.find_some(db, status="deleted", pag=pag, ord=ord)
 
             roles_in_users = await Role.find_all(db)
 
@@ -33,9 +32,9 @@ class InitTemplate:
                 context={
                     "request": request,
                     "users": users,
-                    "deleted_users": deleted_users,
                     "pag": pag,
                     "ord": ord,
+                    "ord_by": ord_by,
                     "roles_in_users": roles_in_users,
                     "roles_by_id": roles_by_id,
                 },
