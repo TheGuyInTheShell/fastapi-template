@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 
 import asyncio
+import os
 
 from sockets import init_sockets
 
@@ -14,6 +15,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from fastapi.templating import Jinja2Templates
+
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+
+from fastapi.openapi.utils import get_openapi
+
+from fastapi.responses import HTMLResponse
+
+from fastapi import Depends
 
 
 import core.jobs as jobs
@@ -29,10 +38,55 @@ from core.services.init_auth import init_auth
 
 from prometheus_fastapi_instrumentator import Instrumentator
 
+version = "1.0.0"
+
+mode = os.getenv("MODE", "PROD")
+
+if mode != "DEVELOPMENT":
+    docs_url = None
+    redoc_url = None
+    openapi_url = None
+else:
+    docs_url = "/docs"
+    redoc_url = "/redoc"
+    openapi_url = "/openapi.json"
 
 
-app = FastAPI()
+app = FastAPI(
+    title="FastAPI Template",
+    version=version,
+    docs_url=docs_url, redoc_url=redoc_url, openapi_url=openapi_url)
 
+
+
+@app.get("/docs", include_in_schema=False, response_class=HTMLResponse, dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)])
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",    
+        title=app.title + " - Docs",
+    )
+
+@app.get('/redoc', include_in_schema=False, response_class=HTMLResponse, dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)])
+async def custom_redoc_html():
+    return get_redoc_html(
+        openapi_url="/openapi.json",    
+        title=app.title + " - Redoc",
+    )
+
+@app.get('/openapi.json', include_in_schema=False, dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)])
+async def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,    
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
 
 app = middlewares.initialazer(app)
 
