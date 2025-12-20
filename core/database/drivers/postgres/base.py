@@ -30,7 +30,7 @@ from .sync_connection import engineSync
 
 from .async_connection import get_async_db
 from .sync_connection import get_sync_db
-
+from core.cache import cache_db
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -154,6 +154,7 @@ class BaseAsync(DeclarativeBase):
         await db.refresh(reg)
         return reg
     
+    @cache_db(ttl=60, prefix="find_one")
     @classmethod
     async def find_one(cls, db: AsyncSession, id: str | int) -> type[Self]:
         query = select(cls).where(cls.id == id) if type(id) == int else select(cls).where(cls.uid == id)

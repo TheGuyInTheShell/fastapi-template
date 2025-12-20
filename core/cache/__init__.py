@@ -1,44 +1,17 @@
 import os
 import json
-import redis.asyncio as redis
-import redis as redis_sync
-from functools import wraps
-from typing import Optional, Any
-from fastapi import HTTPException
-import asyncio
-import time
 import inspect
+from functools import wraps
+from typing import Any, Optional, Callable
 
-class InMemoryCache:
-    def __init__(self):
-        self._cache = {}
-
-    async def get(self, key: str) -> Optional[str]:
-        return self._get_sync(key)
-
-    def _get_sync(self, key: str) -> Optional[str]:
-        data = self._cache.get(key)
-        if not data:
-            return None
-        value, expire_at = data
-        if expire_at and time.time() > expire_at:
-            del self._cache[key]
-            return None
-        return value
-
-    async def set(self, key: str, value: str, ttl: int = 60):
-        self._set_sync(key, value, ttl)
-
-    def _set_sync(self, key: str, value: str, ttl: int = 60):
-        expire_at = time.time() + ttl
-        self._cache[key] = (value, expire_at)
-
-    async def delete(self, key: str):
-        self._delete_sync(key)
-
-    def _delete_sync(self, key: str):
-        if key in self._cache:
-            del self._cache[key]
+# Import Backends
+from .base import BaseCacheBackend
+from .memory import InMemoryCacheBackend
+# Try to import Redis backend, but don't fail if dependencies are issues (though we know they exist)
+try:
+    from .redis.backend import RedisCacheBackend
+except ImportError:
+    RedisCacheBackend = None
 
 class Cache:
     _instance = None
@@ -50,173 +23,241 @@ class Cache:
         return cls._instance
 
     def _initialize(self):
-        self._redis_host = os.getenv("REDIS_HOST", "localhost")
-        self._redis_port = int(os.getenv("REDIS_PORT", 6379))
-        self._memory_client = InMemoryCache()
-        self._use_redis = False
-        self._async_redis_client = None
-        self._sync_redis_client = None
-
-        # Initialize Sync Client Immediately
-        try:
-
-            # Initialize Async Client (Fire and forget, or wait if loop running)
-            self._async_redis_client = redis.Redis(
-                host=self._redis_host,
-                port=self._redis_port,
-                decode_responses=True
-            )
-
-            self._sync_redis_client = redis_sync.Redis(
-                host=self._redis_host,
-                port=self._redis_port,
-                decode_responses=True
-            )
-            self._sync_redis_client.ping()
-
-            self._use_redis = True
-        except Exception:
-            # Fallback to memory if initial ping fails
-            pass
+        self.backend: BaseCacheBackend = None
         
+        # Configuration
+        redis_host = os.getenv("REDIS_HOST", "localhost")
+        redis_port = int(os.getenv("REDIS_PORT", 6379))
+        
+        # Try to initialize Redis
+        try:
+            if RedisCacheBackend:
+                self.backend = RedisCacheBackend(host=redis_host, port=redis_port)
+            else:
+                raise ImportError("Redis backend not available")
+        except Exception as e:
+            print(f"Cache Warning: Could not connect to Redis ({e}). Falling back to In-Memory.")
+            self.backend = InMemoryCacheBackend()
 
-    # --- Async Methods ---
+    # --- Public Accessors for manual usage ---
+    
     async def get(self, key: str) -> Any:
         try:
-            if self._use_redis:
-                return await self._async_redis_client.get(key)
-            return await self._memory_client.get(key)
+            return await self.backend.get(key)
         except Exception:
-            return await self._memory_client.get(key)
+            return None
 
-    async def set(self, key: str, value: str, ttl: int = 60):
+    async def set(self, key: str, value: Any, ttl: int = 60) -> None:
         try:
-            if self._use_redis:
-                await self._async_redis_client.set(key, value, ex=ttl)
-            else:
-                await self._memory_client.set(key, value, ttl)
+            await self.backend.set(key, value, ttl)
         except Exception:
-            await self._memory_client.set(key, value, ttl)
+            pass
 
-    async def delete(self, key: str):
+    async def delete(self, key: str) -> None:
         try:
-            if self._use_redis:
-                await self._async_redis_client.delete(key)
-            else:
-                await self._memory_client.delete(key)
+            await self.backend.delete(key)
         except Exception:
-             await self._memory_client.delete(key)
+            pass
 
-    # --- Sync Methods ---
     def sync_get(self, key: str) -> Any:
         try:
-            if self._use_redis:
-                return self._sync_redis_client.get(key)
-            return self._memory_client._get_sync(key)
+            return self.backend.sync_get(key)
         except Exception:
-             return self._memory_client._get_sync(key)
+            return None
 
-    def sync_set(self, key: str, value: str, ttl: int = 60):
+    def sync_set(self, key: str, value: Any, ttl: int = 60) -> None:
         try:
-            if self._use_redis:
-                self._sync_redis_client.set(key, value, ex=ttl)
-            else:
-                self._memory_client._set_sync(key, value, ttl)
+            self.backend.sync_set(key, value, ttl)
         except Exception:
-            self._memory_client._set_sync(key, value, ttl)
+            pass
 
-    def sync_delete(self, key: str):
+    def sync_delete(self, key: str) -> None:
         try:
-            if self._use_redis:
-                self._sync_redis_client.delete(key)
-            else:
-                self._memory_client._delete_sync(key)
+            self.backend.sync_delete(key)
         except Exception:
-            self._memory_client._delete_sync(key)
+            pass
+            
+    # --- Decorators ---
 
-def cache_endpoint(ttl: int = 60, namespace: str = "main"):
-    """
-    Caching decorator for FastAPI endpoints. Supports Sync and Async functions.
-    """
-    def decorator(func):
-        is_async = inspect.iscoroutinefunction(func)
-        
-        def generate_key(args, kwargs, func_name):
-            user_id = kwargs.get('user_id')
-            parts = [namespace]
-            if user_id:
-                parts.append(f"user:{user_id}")
+    def cache_endpoint(self, ttl: int = 60, namespace: str = "main"):
+        """
+        Caching decorator for FastAPI endpoints. Supports Sync and Async functions.
+        """
+        def decorator(func):
+            is_async = inspect.iscoroutinefunction(func)
+            
+            def generate_key(args, kwargs, func_name):
+                user_id = kwargs.get('user_id')
+                parts = [namespace]
+                if user_id:
+                    parts.append(f"user:{user_id}")
+                else:
+                    parts.append(func_name)
+                    key_data = json.dumps({
+                        "args": [str(a) for a in args], 
+                        "kwargs": {k: str(v) for k, v in kwargs.items()}
+                    }, sort_keys=True)
+                    parts.append(key_data)
+                return ":".join(parts)
+
+            if is_async:
+                @wraps(func)
+                async def async_wrapper(*args, **kwargs):
+                    cache_key = generate_key(args, kwargs, func.__name__)
+
+                    # Try Cache (Accessing self via closure is tricky if methods are bound)
+                    # Use self since this is an instance method
+                    try:
+                        cached = await self.get(cache_key)
+                        if cached:
+                            try:
+                                return json.loads(cached)
+                            except:
+                                pass
+                    except Exception:
+                        pass
+
+                    response = await func(*args, **kwargs)
+
+                    try:
+                        if isinstance(response, dict):
+                            val = json.dumps(response)
+                            await self.set(cache_key, val, ttl=ttl)
+                    except Exception:
+                        pass
+                    
+                    return response
+                return async_wrapper
+                
             else:
-                 parts.append(func_name)
-                 key_data = json.dumps({
-                     "args": [str(a) for a in args], 
-                     "kwargs": {k: str(v) for k, v in kwargs.items()}
-                 }, sort_keys=True)
-                 parts.append(key_data)
-            return ":".join(parts)
+                @wraps(func)
+                def sync_wrapper(*args, **kwargs):
+                    cache_key = generate_key(args, kwargs, func.__name__)
 
-        if is_async:
-            @wraps(func)
-            async def async_wrapper(*args, **kwargs):
-                cache_key = generate_key(args, kwargs, func.__name__)
-                cache = Cache()
+                    try:
+                        cached = self.sync_get(cache_key)
+                        if cached:
+                            try:
+                                return json.loads(cached)
+                            except:
+                                return cached
+                    except Exception:
+                        pass
 
-                # Try Cache
-                try:
-                    cached = await cache.get(cache_key)
-                    if cached:
-                        try:
-                            return json.loads(cached)
-                        except:
-                            pass
-                except Exception:
-                    pass
+                    response = func(*args, **kwargs)
 
-                # Call original
-                response = await func(*args, **kwargs)
-
-                # Store Cache
-                try:
-                    if isinstance(response, dict):
-                        val = json.dumps(response)
-                        await cache.set(cache_key, val, ttl=ttl)
-                except Exception as e:
-                    pass
+                    try:
+                        if isinstance(response, dict):
+                            val = json.dumps(response)
+                        else:
+                            val = response
+                        self.sync_set(cache_key, val, ttl=ttl)
+                    except Exception:
+                        pass
+                    
+                    return response
+                return sync_wrapper
                 
-                return response
-            return async_wrapper
+        return decorator
+
+    def cache_db(self, ttl: int = 60, prefix: str = "db"):
+        """
+        Caching decorator explicitly for DB functions (Services/Repositories).
+        """
+        def decorator(func):
+            is_async = inspect.iscoroutinefunction(func)
             
-        else:
-            @wraps(func)
-            def sync_wrapper(*args, **kwargs):
-                cache_key = generate_key(args, kwargs, func.__name__)
-                cache = Cache()
+            def generate_key(args, kwargs, func_name):
+                parts = [prefix, func_name]
+                key_data = json.dumps({
+                        "args": [str(a) for a in args], 
+                        "kwargs": {k: str(v) for k, v in kwargs.items()}
+                    }, sort_keys=True)
+                parts.append(key_data)
+                return ":".join(parts)
 
-                # Try Cache
-                try:
-                    cached = cache.sync_get(cache_key)
-                    if cached:
-                        try:
-                            return json.loads(cached)
-                        except:
-                            return cached
-                except Exception:
-                    pass
+            if is_async:
+                @wraps(func)
+                async def async_wrapper(*args, **kwargs):
+                    cache_key = generate_key(args, kwargs, func.__name__)
+                    
+                    try:
+                        cached = await self.get(cache_key)
+                        if cached:
+                            try:
+                                return json.loads(cached)
+                            except:
+                                pass
+                    except Exception:
+                        pass
 
-                # Call original
-                response = func(*args, **kwargs)
+                    response = await func(*args, **kwargs)
 
-                # Store Cache
-                try:
-                    if isinstance(response, dict):
-                        val = json.dumps(response)
-                    else:
-                        val = response
-                    cache.sync_set(cache_key, val, ttl=ttl)
-                except Exception as e:
-                    pass
-                
-                return response
-            return sync_wrapper
-            
-    return decorator
+                    try:
+                        val = self._serialize_db_response(response)
+                        if val:
+                            await self.set(cache_key, val, ttl=ttl)
+                    except Exception:
+                        pass
+                    
+                    return response
+                return async_wrapper
+            else:
+                @wraps(func)
+                def sync_wrapper(*args, **kwargs):
+                    cache_key = generate_key(args, kwargs, func.__name__)
+                    
+                    try:
+                        cached = self.sync_get(cache_key)
+                        if cached:
+                            try:
+                                return json.loads(cached)
+                            except:
+                                pass
+                    except Exception:
+                        pass
+
+                    response = func(*args, **kwargs)
+
+                    try:
+                        val = self._serialize_db_response(response)
+                        if val:
+                            self.sync_set(cache_key, val, ttl=ttl)
+                    except Exception:
+                        pass
+                    
+                    return response
+                return sync_wrapper
+
+        return decorator
+
+    def _serialize_db_response(self, response: Any) -> Optional[str]:
+        if hasattr(response, "model_dump"):
+            return json.dumps(response.model_dump())
+        elif hasattr(response, "dict"):
+             return json.dumps(response.dict())
+        elif isinstance(response, dict):
+             return json.dumps(response)
+        elif isinstance(response, (list, tuple)):
+            data_list = []
+            for item in response:
+                if hasattr(item, "model_dump"):
+                    data_list.append(item.model_dump())
+                elif hasattr(item, "dict"):
+                    data_list.append(item.dict())
+                else:
+                    data_list.append(item)
+            return json.dumps(data_list)
+        return None
+
+# Singleton Instance
+cache = Cache()
+
+# Expose decorators as if they were top-level functions for backward compatibility
+# The user's previous code imports `cache_endpoint`. 
+# While proper object-oriented usage is `@cache.cache_endpoint`, to prevent
+# breaking ALL files I changed, I will alias them here.
+# Warning: This binds the decorator to the singleton instance 'cache'.
+
+cache_endpoint = cache.cache_endpoint
+cache_db = cache.cache_db

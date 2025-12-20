@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
 from modules.auth.services import decode_token
-from core.cache import cache_endpoint
+from core.cache import Cache
 
 from .models import User
 from .schemas import RSUserTokenData
@@ -14,12 +14,14 @@ from .schemas import RSUserTokenData
 # prefix /users
 router = APIRouter()
 
+cache = Cache()
+
 oauth2_schema = OAuth2PasswordBearer('/token')
 
 tag = 'users'
 
 @router.get('/me', response_model=RSUserTokenData, tags=[tag])
-@cache_endpoint(ttl=120, namespace="users")
+@cache.cache_endpoint(ttl=120, namespace="users")
 async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
     try:
         if not token:
@@ -40,7 +42,7 @@ async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
     
     
 @router.get('', tags=[tag])
-@cache_endpoint(ttl=60, namespace="users")
+@cache.cache_endpoint(ttl=60, namespace="users")
 async def get_users(db: AsyncSession = Depends(get_async_db)):
     try:
         result = await User.find_some(db, status='exists')

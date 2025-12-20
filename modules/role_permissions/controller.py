@@ -4,14 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_async_db
 from .schemas import RQAssignPermission, RQRemovePermission, RSRolePermissions
 from .services import assign_permission_to_role, remove_permission_from_role, get_role_permissions
-from core.cache import cache_endpoint
+from core.cache import Cache
 
 router = APIRouter()
+
+cache = Cache()
+
 tag = 'role_permissions'
 
 
 @router.get('/role/{role_id}', response_model=RSRolePermissions, status_code=200, tags=[tag])
-@cache_endpoint(ttl=60, namespace="role-permissions")
+@cache.cache_endpoint(ttl=60, namespace="role-permissions")
 async def get_role_permissions_endpoint(
     role_id: str, 
     db: AsyncSession = Depends(get_async_db)

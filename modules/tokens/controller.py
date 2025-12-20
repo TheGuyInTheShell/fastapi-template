@@ -10,16 +10,18 @@ from core.database import get_async_db
 from .models import ApiToken
 from .schemas import RQApiToken, RSApiToken, RSApiTokensList
 from .services import save_token
-from core.cache import cache_endpoint
+from core.cache import Cache
 
 # prefix /tokens
 router = APIRouter()
+
+cache = Cache()
 
 tag = "tokens"
 
 
 @router.get("/id/{id}", response_model=RSApiToken, tags=[tag])
-@cache_endpoint(ttl=60, namespace="tokens")
+@cache.cache_endpoint(ttl=60, namespace="tokens")
 async def get_token(id: str, db: AsyncSession = Depends(get_async_db)) -> RSApiToken:
     try:
         result = await ApiToken.find_one(db, id)
@@ -29,7 +31,7 @@ async def get_token(id: str, db: AsyncSession = Depends(get_async_db)) -> RSApiT
 
 
 @router.get("/", response_model=RSApiTokensList, tags=[tag])
-@cache_endpoint(ttl=60, namespace="tokens")
+@cache.cache_endpoint(ttl=60, namespace="tokens")
 async def get_tokens(
     pag: Optional[int] = 1,
     ord: Literal["desc", "asc"] = "asc",

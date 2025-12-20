@@ -4,15 +4,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_async_db
 from .models import MenuRole
 from .schemas import RQMenuRole, RSMenuRole, RSMenuRoleList
-from core.cache import cache_endpoint
+from core.cache import Cache
 
 # prefix /menu
 router = APIRouter()
+
+cache = Cache()
+
 tag = 'menu - roles'
     
 
 @router.get('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
-@cache_endpoint(ttl=60, namespace="menu-roles")
+@cache.cache_endpoint(ttl=60, namespace="menu-roles")
 async def get_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
     try:
         result = await MenuRole.find_one(db, id)
@@ -23,7 +26,7 @@ async def get_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> RS
 
 
 @router.get('/', response_model=RSMenuRoleList, status_code=200, tags=[tag])
-@cache_endpoint(ttl=60, namespace="menu-roles")
+@cache.cache_endpoint(ttl=60, namespace="menu-roles")
 async def get_menu_roles(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 
