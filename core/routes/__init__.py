@@ -17,7 +17,7 @@ api_router = APIRouter()
 @api_router.get("/check", dependencies=[])
 
 async def response():
-    channel.emit_to("test").run("test")
+    # channel.emit_to("test").run("test")
 
     return {"result": "Ok!"}
 
