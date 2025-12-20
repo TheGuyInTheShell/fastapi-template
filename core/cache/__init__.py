@@ -7,12 +7,16 @@ from typing import Optional, Any
 from fastapi import HTTPException
 import asyncio
 import time
+import inspect
 
 class InMemoryCache:
     def __init__(self):
         self._cache = {}
 
     async def get(self, key: str) -> Optional[str]:
+        return self._get_sync(key)
+
+    def _get_sync(self, key: str) -> Optional[str]:
         data = self._cache.get(key)
         if not data:
             return None
@@ -23,214 +27,196 @@ class InMemoryCache:
         return value
 
     async def set(self, key: str, value: str, ttl: int = 60):
+        self._set_sync(key, value, ttl)
+
+    def _set_sync(self, key: str, value: str, ttl: int = 60):
         expire_at = time.time() + ttl
         self._cache[key] = (value, expire_at)
 
     async def delete(self, key: str):
+        self._delete_sync(key)
+
+    def _delete_sync(self, key: str):
         if key in self._cache:
             del self._cache[key]
 
 class Cache:
     _instance = None
-    _backend = None
-
+    
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Cache, cls).__new__(cls)
-            if asyncio.get_event_loop().is_running():
-                asyncio.ensure_future(cls._instance._init_backend())
-            else:
-                asyncio.run(cls._instance._init_backend())
+            cls._instance._initialize()
         return cls._instance
 
-    async def _init_backend(self):
-        redis_host = os.getenv("REDIS_HOST", "localhost")
-        redis_port = int(os.getenv("REDIS_PORT", 6379))
+    def _initialize(self):
+        self._redis_host = os.getenv("REDIS_HOST", "localhost")
+        self._redis_port = int(os.getenv("REDIS_PORT", 6379))
         self._memory_client = InMemoryCache()
         self._use_redis = False
+        self._async_redis_client = None
+        self._sync_redis_client = None
 
-        # Try to initialize Redis
+        # Initialize Sync Client Immediately
         try:
-            # We don't await here because __init__ is sync, but we create the client.
-            # Actual connection check might happen on first use or we can try a ping if we were async.
-            # For simplicity, we assume Redis is preferred if configured.
-            # Ideally we'd ping to check availability, but that requires async.
-            # We will default to Redis client, and handle connection errors in methods?
-            # Or effectively "if configured, use it".
-            # The prompt says: "use redis si esta disponible segun un archivo de configuracion"
-            # It also says: "si no esta disponible crea una cache en memoria" - this suggests dynamic check.
-            
-            # Let's try to verify connection? We can't easily in sync __new__.
-            # We'll use a lazy approach or a sync check if possible, OR just default to Memory if not ENV set.
-            # Assuming if env vars are present, we try Redis.
-            self._redis_client = redis.Redis(
-                host=redis_host,
-                port=redis_port,
+
+            # Initialize Async Client (Fire and forget, or wait if loop running)
+            self._async_redis_client = redis.Redis(
+                host=self._redis_host,
+                port=self._redis_port,
                 decode_responses=True
             )
-            await self._redis_client.ping()
+
+            self._sync_redis_client = redis_sync.Redis(
+                host=self._redis_host,
+                port=self._redis_port,
+                decode_responses=True
+            )
+            self._sync_redis_client.ping()
+
             self._use_redis = True
-            return
-        except redis.ConnectionError as e:
-            print('Redis connection error (using memory cache)')
+        except Exception:
+            # Fallback to memory if initial ping fails
+            pass
         
-        # We'll determine backend on first use or assume valid if env vars set?
-        # A robust way is to try to ping in a startup hook, but here we are in a class.
-        # Let's try to connect in a background task or just failover gracefully.
-        # Actually, let's allow failing over to memory if redis operation fails.
-        
+
+    # --- Async Methods ---
     async def get(self, key: str) -> Any:
         try:
-            # Try Redis first
             if self._use_redis:
-                return await self._redis_client.get(key)
-            else:
-                return await self._memory_client.get(key)
-        except redis.ConnectionError:
-            # Fallback to memory
-             return await self._memory_client.get(key)
-        except Exception as e:
-            # Fallback for other redis errors
+                return await self._async_redis_client.get(key)
+            return await self._memory_client.get(key)
+        except Exception:
             return await self._memory_client.get(key)
 
     async def set(self, key: str, value: str, ttl: int = 60):
         try:
             if self._use_redis:
-                await self._redis_client.set(key, value, ex=ttl)
+                await self._async_redis_client.set(key, value, ex=ttl)
             else:
                 await self._memory_client.set(key, value, ttl)
-        except redis.ConnectionError:
-            if self._use_redis:
-                await self._memory_client.set(key, value, ttl)
         except Exception:
-            if self._use_redis:
-                await self._memory_client.set(key, value, ttl)
+            await self._memory_client.set(key, value, ttl)
 
     async def delete(self, key: str):
         try:
             if self._use_redis:
-                await self._redis_client.delete(key)
+                await self._async_redis_client.delete(key)
             else:
                 await self._memory_client.delete(key)
         except Exception:
-            if self._use_redis:
-                await self._memory_client.delete(key)
+             await self._memory_client.delete(key)
 
-
+    # --- Sync Methods ---
     def sync_get(self, key: str) -> Any:
         try:
-            # Try Redis first
             if self._use_redis:
-                return self._redis_client.get(key)
-            else:
-                return self._memory_client.get(key)
-        except redis.ConnectionError:
-            # Fallback to memory
-             return self._memory_client.get(key)
-        except Exception as e:
-            # Fallback for other redis errors
-            return self._memory_client.get(key)
+                return self._sync_redis_client.get(key)
+            return self._memory_client._get_sync(key)
+        except Exception:
+             return self._memory_client._get_sync(key)
 
     def sync_set(self, key: str, value: str, ttl: int = 60):
         try:
             if self._use_redis:
-                self._redis_client.set(key, value, ex=ttl)
+                self._sync_redis_client.set(key, value, ex=ttl)
             else:
-                self._memory_client.set(key, value, ttl)
-        except redis.ConnectionError:
-            if self._use_redis:
-                self._memory_client.set(key, value, ttl)
+                self._memory_client._set_sync(key, value, ttl)
         except Exception:
-            if self._use_redis:
-                self._memory_client.set(key, value, ttl)
+            self._memory_client._set_sync(key, value, ttl)
 
     def sync_delete(self, key: str):
         try:
             if self._use_redis:
-                self._redis_client.delete(key)
+                self._sync_redis_client.delete(key)
             else:
-                self._memory_client.delete(key)
+                self._memory_client._delete_sync(key)
         except Exception:
-            if self._use_redis:
-                self._memory_client.delete(key)
+            self._memory_client._delete_sync(key)
 
 def cache_endpoint(ttl: int = 60, namespace: str = "main"):
     """
-    Caching decorator for FastAPI endpoints.
-
-    ttl: Time to live for the cache in seconds.
-    namespace: Namespace for cache keys in Redis.
+    Caching decorator for FastAPI endpoints. Supports Sync and Async functions.
     """
     def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            # Attempt to extract identifiers for the key
-            # Priority: user_id provided in kwargs, or the first arg (if applicable/safe assumption)
-            # This logic mimics the user's example but might be risky if args[0] isn't user_id.
-            # Safest is to rely on specific kwargs if known, or hash all args.
-            # User example: user_id = kwargs.get('user_id') or args[0]
-            
-            # Use request path/query if available? The user specifically used "user_id".
-            # I will try to support a generic key generation if user_id is missing, 
-            # to make it applicable to ANY endpoint as requested ("cada enpoint").
-            
+        is_async = inspect.iscoroutinefunction(func)
+        
+        def generate_key(args, kwargs, func_name):
             user_id = kwargs.get('user_id')
-            if not user_id and args:
-                 # Check if the first arg is a primitive we can use? 
-                 # Often first arg in existing endpoints might be 'request' or 'db'.
-                 # Let's just use a hash of args/kwargs for a generic key if user_id missing.
-                 pass
-
             parts = [namespace]
             if user_id:
                 parts.append(f"user:{user_id}")
             else:
-                # Generic cache key strategy: func name + args hash
-                 parts.append(func.__name__)
-                 # Simple arg stringification (careful with objects)
-                 # This is a basic implementation.
+                 parts.append(func_name)
                  key_data = json.dumps({
                      "args": [str(a) for a in args], 
                      "kwargs": {k: str(v) for k, v in kwargs.items()}
                  }, sort_keys=True)
                  parts.append(key_data)
+            return ":".join(parts)
 
-            cache_key = ":".join(parts)
-            cache = Cache()
+        if is_async:
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                cache_key = generate_key(args, kwargs, func.__name__)
+                cache = Cache()
 
-            # Try to retrieve data from cache
-            try:
-                cached_value = await cache.get(cache_key)
-                if cached_value:
-                    try:
-                        return json.loads(cached_value)
-                    except Exception:
-                        return cached_value
-            except Exception:
-                # If deserialization fails or other error, proceed to call func
-                pass
-
-            # Call the actual function
-            response = await func(*args, **kwargs)
-
-            try:
-                # Store the response
-                # We need to serialize response. Pydantic models need .model_dump() or jsonable_encoder
-                # But implementation plan says "json.dumps".
-                # If response is a Pydantic model, json.dumps might fail unless we handle it.
-                # Assuming simple dicts or json-compatible for now as per example.
-                
+                # Try Cache
                 try:
-                    json_response = json.dumps(response)
+                    cached = await cache.get(cache_key)
+                    if cached:
+                        try:
+                            return json.loads(cached)
+                        except:
+                            pass
                 except Exception:
-                    json_response = response
+                    pass
 
-                await cache.set(cache_key, json_response, ttl=ttl)
-            except Exception as e:
-                # Log error but don't fail the request?
-                # User example raised HTTPException(500).
-                raise HTTPException(status_code=500, detail=f"Error caching data: {e}")
+                # Call original
+                response = await func(*args, **kwargs)
 
-            return response
-        return wrapper
+                # Store Cache
+                try:
+                    if isinstance(response, dict):
+                        val = json.dumps(response)
+                        await cache.set(cache_key, val, ttl=ttl)
+                except Exception as e:
+                    pass
+                
+                return response
+            return async_wrapper
+            
+        else:
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                cache_key = generate_key(args, kwargs, func.__name__)
+                cache = Cache()
+
+                # Try Cache
+                try:
+                    cached = cache.sync_get(cache_key)
+                    if cached:
+                        try:
+                            return json.loads(cached)
+                        except:
+                            return cached
+                except Exception:
+                    pass
+
+                # Call original
+                response = func(*args, **kwargs)
+
+                # Store Cache
+                try:
+                    if isinstance(response, dict):
+                        val = json.dumps(response)
+                    else:
+                        val = response
+                    cache.sync_set(cache_key, val, ttl=ttl)
+                except Exception as e:
+                    pass
+                
+                return response
+            return sync_wrapper
+            
     return decorator

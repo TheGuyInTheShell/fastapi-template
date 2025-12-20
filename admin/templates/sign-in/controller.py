@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_async_db
 from modules.auth.services import authenticade_user, create_token
 from .services import has_permission
-from core.cache import cache_endpoint
 
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
@@ -20,7 +19,6 @@ class InitTemplate:
     def add_page(self):
 
         @self.router.get("", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="sign-in")
         async def main_sign_in(request: Request):
             return self.templates.TemplateResponse(
                 "pages/sign-in.html",
@@ -32,7 +30,6 @@ class InitTemplate:
     def add_partials(self):
 
         @self.router.post("/partial/sign-in", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="sign-in")
         async def admin_sign_in(
             request: Request,
             username: Annotated[str, Form()],
