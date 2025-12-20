@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
 from modules.users.models import User
+from core.cache import cache_endpoint
 
 from .schemas import RQUser, RQUserLogin, RSUser, RSUserTokenData
 from .services import authenticade_user, create_token, create_user, get_user
@@ -15,6 +16,7 @@ oauth2_schema = OAuth2PasswordBearer("auth/sign-in")
 tag = 'auth'
 
 @router.get("/", tags=[tag])
+@cache_endpoint(ttl=120, namespace="auth")
 def token(token: str = Depends(oauth2_schema)):
     return token
 

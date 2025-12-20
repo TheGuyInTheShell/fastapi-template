@@ -7,12 +7,14 @@ from core.database import get_async_db
 
 from .models import Permission
 from .schemas import RQPermission, RSPermission, RSPermissionList
+from core.cache import cache_endpoint
 
 # prefix /permissions
 router = APIRouter()
 tag = 'permissions'
 
 @router.get('/id/{id}', response_model=RSPermission, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="permissions")
 async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
     try:
         result = await Permission.find_one(db, id)
@@ -23,6 +25,7 @@ async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> R
 
 
 @router.get('/', response_model=RSPermissionList, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="permissions")
 async def get_Permissions(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 
@@ -53,6 +56,7 @@ async def get_Permissions(pag: Optional[int] = 1,
         raise e
 
 @router.get('/all', response_model=RSPermissionList, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="permissions")
 async def get_all_Permissions(status: Literal["deleted", "exists", "all"] = "exists", db: AsyncSession = Depends(get_async_db)) -> RSPermissionList:
     try:
         result = await Permission.find_all(db, status)

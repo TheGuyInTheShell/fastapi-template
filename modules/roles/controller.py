@@ -8,12 +8,14 @@ from core.database import get_async_db
 from .models import Role
 from .schemas import RQRole, RSRole, RSRoleList
 from .services import create_role
+from core.cache import cache_endpoint
 
 # prefix /roles
 router = APIRouter()
 tag = 'roles'
 
 @router.get('/id/{id}', response_model=RSRole, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="roles")
 async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
     try:
         result = await Role.find_one(db, id)
@@ -24,6 +26,7 @@ async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
 
 
 @router.get('/', response_model=RSRoleList, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="roles")
 async def get_Roles(pag: Optional[int] = 1, 
                             ord: Literal["asc", "desc"] = "asc", 
                             status: Literal["deleted", "exists", "all"] = "exists", 

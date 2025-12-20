@@ -9,7 +9,6 @@ from core.database import get_async_db
 from modules.roles.models import Role
 from modules.permissions.models import Permission
 from core.database import SessionAsync
-from core.cache import cache_endpoint
 
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
@@ -18,7 +17,6 @@ class InitTemplate:
 
     def add_page(self):
         @self.router.get("", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="roles")
         async def roles_page(request: Request, db: AsyncSession = Depends(get_async_db)):
             # Get all roles (filter out deleted ones)
             all_roles = await Role.find_some(db, pag=1, ord="asc", status="all", filters={})
@@ -33,7 +31,6 @@ class InitTemplate:
             )
 
         @self.router.get("/create", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="roles")
         async def create_role_page(request: Request, db: AsyncSession = Depends(get_async_db)):
             # Get all permissions for multi-select
             all_perms = await Permission.find_all(db, status="exists")
@@ -94,7 +91,6 @@ class InitTemplate:
                 )
 
         @self.router.get("/edit/{role_id}", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="roles")
         async def admin_edit_role_page(
             request: Request,
             role_id: str,
@@ -120,7 +116,6 @@ class InitTemplate:
                 raise e
 
         @self.router.post("/edit/{role_id}", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="roles")
         async def admin_edit_role(
             request: Request,
             role_id: str,
@@ -179,7 +174,6 @@ class InitTemplate:
     def add_partials(self):
         # Only keep delete partial for HTMX
         @self.router.delete("/partial/delete/{role_id}", response_class=HTMLResponse)
-        @cache_endpoint(ttl=60, namespace="roles")
         async def admin_delete_role(
             request: Request,
             role_id: str,

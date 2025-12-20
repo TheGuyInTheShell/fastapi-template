@@ -7,12 +7,14 @@ from core.database import get_async_db
 
 from .models import Menu
 from .schemas import RQMenu, RSMenu, RSMenuList
+from core.cache import cache_endpoint
 
 # prefix /menu
 router = APIRouter()
 tag = 'menu'
 
 @router.get("/id/{id}", response_model=RSMenu, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="menu")
 async def get_menu(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenu:
     try:
         result = await Menu.find_one(db, id)
@@ -23,6 +25,7 @@ async def get_menu(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenu:
 
 
 @router.get("/", response_model=RSMenuList, status_code=200, tags=[tag])
+@cache_endpoint(ttl=60, namespace="menu")
 async def get_menus(
     pag: Optional[int] = 1,
     ord: Literal["asc", "desc"] = "asc",
