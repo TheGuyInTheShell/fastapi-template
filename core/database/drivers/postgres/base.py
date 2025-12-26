@@ -1,17 +1,77 @@
 import asyncio
 import uuid
 from datetime import datetime
-from async_lru import alru_cache
-
-from typing import Any, List, Literal, Self, Sequence, Set
-
-from datetime import datetime
-
-from typing import Any, List, Literal, Self, Sequence, Set
-
-from functools import wraps, lru_cache
-
+from functools import wraps
 import json
+from typing import Any, List, Literal, Self, Sequence, Set
+
+def make_hashable(value):
+    if isinstance(value, dict):
+        return tuple(sorted((k, make_hashable(v)) for k, v in value.items()))
+    if isinstance(value, list):
+        return tuple(make_hashable(v) for v in value)
+    return value
+
+def async_lru(maxsize=128):
+    cache = {}
+    
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Filter out AsyncSession from args (it's usually the 2nd arg after cls, or explicitly passed)
+            # Strategy: Generate key from strings of args, skipping AsyncSession objects
+            key_args = []
+            for arg in args:
+                if "session.AsyncSession" in str(type(arg)) or "sqlalchemy.orm.session.Session" in str(type(arg)):
+                    continue
+                key_args.append(make_hashable(arg))
+            
+            key_kwargs = {k: make_hashable(v) for k, v in kwargs.items() if "session" not in str(type(v))}
+            
+            key = (func.__name__, tuple(key_args), tuple(sorted(key_kwargs.items())))
+            
+            if key in cache:
+                return cache[key]
+            
+            result = await func(*args, **kwargs)
+            
+            if len(cache) >= maxsize:
+                # Simple FIFO eviction for stability
+                try:
+                    cache.pop(next(iter(cache)))
+                except StopIteration:
+                    pass
+            
+            cache[key] = result
+            return result
+        return wrapper
+    return decorator
+
+def sync_lru(maxsize=128):
+    cache = {}
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+             # Similar key generation
+            key_args = tuple(make_hashable(arg) for arg in args)
+            key_kwargs = tuple(sorted((k, make_hashable(v)) for k, v in kwargs.items()))
+            key = (func.__name__, key_args, key_kwargs)
+            
+            if key in cache:
+                return cache[key]
+            
+            result = func(*args, **kwargs)
+            
+            if len(cache) >= maxsize:
+                 try:
+                    cache.pop(next(iter(cache)))
+                 except StopIteration:
+                    pass
+            
+            cache[key] = result
+            return result
+        return wrapper
+    return decorator
 
 
 from sqlalchemy import (
@@ -107,18 +167,18 @@ class BaseAsync(DeclarativeBase):
     is_deleted: Mapped[bool] = mapped_column(default=False)
 
     @classmethod
-    @lru_cache(maxsize=24)
+    @sync_lru(maxsize=24)
     def get_deleted(cls) -> Table:
         return cls.deleted
 
     @classmethod
-    @lru_cache(maxsize=24)
+    @sync_lru(maxsize=24)
     def get_exists(cls) -> Table:
 
         return cls.exists
 
     @classmethod
-    @lru_cache(maxsize=24)
+    @sync_lru(maxsize=24)
     def touple_to_dict(cls, arr: Sequence[Self]) -> List[Self]:
 
         mapped = get_mapper(cls)
@@ -245,7 +305,7 @@ class BaseAsync(DeclarativeBase):
         return reg
 
     @classmethod
-    @alru_cache(maxsize=24)
+    @async_lru(maxsize=24)
     async def find_one(cls, db: AsyncSession, id: str | int) -> type[Self]:
 
         query = (
@@ -266,7 +326,7 @@ class BaseAsync(DeclarativeBase):
         return result
 
     @classmethod
-    @alru_cache(maxsize=24)
+    @async_lru(maxsize=24)
     async def find_all(
         cls,
         db: AsyncSession,
@@ -292,7 +352,7 @@ class BaseAsync(DeclarativeBase):
         return result
 
     @classmethod
-    @lru_cache(maxsize=24)
+    @sync_lru(maxsize=24)
     def get_order_by(cls, order_by: str) -> Column:
 
         table = Table(cls.__tablename__, MetaData(), autoload_with=engineSync)
@@ -300,7 +360,7 @@ class BaseAsync(DeclarativeBase):
         return table.c.get(order_by)
 
     @classmethod
-    @alru_cache(maxsize=24)
+    @async_lru(maxsize=24)
     async def find_some(
         cls,
         db: AsyncSession,
@@ -308,7 +368,7 @@ class BaseAsync(DeclarativeBase):
         order_by: str = None,
         ord: str = "asc",
         status: Literal["deleted", "exists", "all"] = "all",
-        filters: dict = dict(),
+        filters: dict = {},
     ) -> List[Self]:
 
         # Determine the source and initial query
@@ -392,14 +452,14 @@ class BaseAsync(DeclarativeBase):
         return result if status == "all" else cls.touple_to_dict(result)
 
     @classmethod
-    @alru_cache(maxsize=24)
+    @async_lru(maxsize=24)
     async def find_by_colunm(cls, db: AsyncSession, column: str, value: Any):
 
         result = await db.execute(select(cls).where(getattr(cls, column) == value))
         return result
 
     @classmethod
-    @alru_cache(maxsize=24)
+    @async_lru(maxsize=24)
     async def find_by_specification(cls, db: AsyncSession, specification: dict):
 
         result = await db.execute(select(cls).where(**specification))
