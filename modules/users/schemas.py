@@ -23,15 +23,18 @@ class RSUser(BaseModel):
     full_name: str
     email: EmailStr
     role: str
+
+    otp_enabled: bool = False
     created_at: datetime
 
 
 class RSUserTokenData(BaseModel):
-    _id: str
+    uid: str
     username: str
     role: str
     full_name: str
     email: EmailStr
+    otp_enabled: bool = False
 
 
 class INUser(RSUser):

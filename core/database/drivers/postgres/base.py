@@ -384,14 +384,12 @@ class BaseAsync(DeclarativeBase):
         return result if status == "all" else cls.touple_to_dict(result)
 
     @classmethod
-    @async_lru(maxsize=24)
     async def find_by_colunm(cls, db: AsyncSession, column: str, value: Any):
 
         result = await db.execute(select(cls).where(getattr(cls, column) == value))
         return result
 
     @classmethod
-    @async_lru(maxsize=24)
     async def find_by_specification(cls, db: AsyncSession, specification: dict):
 
         result = await db.execute(select(cls).where(**specification))

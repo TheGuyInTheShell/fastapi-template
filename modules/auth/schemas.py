@@ -23,6 +23,7 @@ class RSUser(BaseModel):
     full_name: str | None = None
     email: EmailStr
     role: str
+    otp_enabled: bool = False
 
     def email_is_empty(self):
         return self.email is None

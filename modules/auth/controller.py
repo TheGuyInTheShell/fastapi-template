@@ -18,8 +18,11 @@ from .services import (
     create_user,
     decode_token,
     get_user,
+    get_user,
     REFRESH_TOKEN_EXPIRE_MINUTES,
 )
+from .otp import generate_otp_secret, verify_otp_code, get_otp_provisioning_uri, generate_qr_code_base64
+from pydantic import BaseModel
 
 # prefix /auth
 router = APIRouter()
@@ -46,6 +49,30 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
             raise HTTPException(
                 status_code=401, detail="Incorrect username or password"
             )
+
+        if user.otp_enabled:
+             # Create a temporary partial token or just return a signal
+             # Ideally we issue a temporary token with a "partial_auth" scope or similar.
+             # For simplicity, we can return a specific response that client handles.
+             # Let's issue a temporary token that is ONLY valid for verifying OTP.
+             temp_token = create_token(
+                data={
+                    "sub": user.username,
+                    "id": user.uid,
+                    "type": "partial_2fa",
+                     # Short expiry for this step
+                    "role": "guest" # No permissions
+                }, 
+                expires_time=5 # 5 minutes
+             )
+             return JSONResponse(
+                 status_code=202, # Accepted
+                 content={
+                     "message": "OTP required",
+                     "temp_token": temp_token,
+                     "require_2fa": True
+                 }
+             )
 
         # Create access token
         access_token = create_token(
@@ -169,6 +196,125 @@ async def refresh_token_endpoint(
     )
 
     return response
+
+
+class OTPVerifyRequest(BaseModel):
+    otp_code: str
+    temp_token: str
+
+@router.post("/verify-otp", tags=[tag])
+async def verify_otp(request: OTPVerifyRequest, db: AsyncSession = Depends(get_async_db)):
+    # Decode temp token
+    payload = decode_token(request.temp_token)
+    if not payload or payload.get("type") != "partial_2fa":
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    uid = payload.get("id")
+    user_query = await User.find_by_colunm(db, "uid", uid)
+    user = user_query.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+        
+    if not user.otp_enabled:
+         # Weird state, maybe 2FA was disabled in between?
+         raise HTTPException(status_code=400, detail="2FA not enabled for user")
+
+    if not verify_otp_code(user.otp_secret, request.otp_code):
+        raise HTTPException(status_code=401, detail="Invalid OTP code")
+        
+    # Issue full tokens
+    access_token = create_token(
+            data={
+                "sub": user.username,
+                "email": user.email,
+                "role": user.role,
+                "full_name": user.full_name,
+                "id": user.uid,
+            }
+        )
+    
+    refresh_token = create_refresh_token(
+            data={
+                "sub": user.username,
+                "email": user.email,
+                "role": user.role,
+                "full_name": user.full_name,
+                "id": user.uid,
+            }
+        )
+
+    response = JSONResponse(
+            content={
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+            }
+        )
+
+    response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            samesite="lax",
+        )
+
+    response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            max_age=REFRESH_TOKEN_EXPIRE_MINUTES * 60,
+            path="/auth/refresh",
+            samesite="lax",
+        )
+        
+    return response
+
+
+
+
+# We need a dependency to get current user from token for these protected endpoints
+async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_async_db)):
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    query = await User.find_by_colunm(db, "username", payload.get("sub"))
+    user = query.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+@router.get("/2fa/setup", tags=[tag])
+async def setup_2fa(current_user=Depends(get_current_user)):
+    secret = generate_otp_secret()
+    uri = get_otp_provisioning_uri(secret, current_user.username)
+    qr_b64 = generate_qr_code_base64(uri)
+    
+    return {
+        "secret": secret,
+        "qr_code": qr_b64
+    }
+
+class OTPEnableRequest(BaseModel):
+    otp_code: str
+    secret: str
+
+@router.post("/2fa/enable", tags=[tag])
+async def enable_2fa(request: OTPEnableRequest, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
+    if verify_otp_code(request.secret, request.otp_code):
+        current_user.otp_secret = request.secret
+        current_user.otp_enabled = True
+        await current_user.save(db)
+        return {"message": "2FA enabled successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid OTP code")
+
+@router.post("/2fa/disable", tags=[tag])
+async def disable_2fa(current_user=Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
+    current_user.otp_enabled = False
+    current_user.otp_secret = None
+    await current_user.save(db)
+    return {"message": "2FA disabled successfully"}
 
 
 @router.post("/sign-up", response_model=RSUser, tags=[tag])

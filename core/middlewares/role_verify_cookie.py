@@ -98,24 +98,29 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
         await db.close()
 
         # Check if permission exists and user has it
+        # Check if permission exists and user has it
         if not permission_require:
-            # No permission requirement found for this route - allow access
-            return RSUserTokenData(
+             # No permission requirement found for this route - allow access
+            user_data = RSUserTokenData(
                 uid=payload["id"],
                 username=payload["sub"],
                 email=payload["email"],
-                full_name=payload["full_name"],
+                full_name=payload.get("full_name", ""),
                 role=payload["role"],
             )
+            request.state.user = user_data
+            return user_data
 
         if permission_require.uid in permissions_users:
-            return RSUserTokenData(
+            user_data = RSUserTokenData(
                 uid=payload["id"],
                 username=payload["sub"],
                 email=payload["email"],
-                full_name=payload["full_name"],
+                full_name=payload.get("full_name", ""),
                 role=payload["role"],
             )
+            request.state.user = user_data
+            return user_data
         else:
             raise HTTPException(
                 status_code=status.HTTP_302_FOUND,

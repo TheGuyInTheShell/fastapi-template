@@ -1,0 +1,22 @@
+<div id="notification">
+    <div class="alert alert-info text-white mb-4">
+        <span>Please enter your 2FA code.</span>
+    </div>
+</div>
+
+<form id="sign-in" hx-post="/admin/sign-in/partial/verify-otp" hx-swap="outerHTML" hx-target="#notification"
+    hx-swap-oob="true">
+    <input type="hidden" name="temp_token" value="{{ temp_token }}">
+    <div class="mb-4">
+        <label class="input input-bordered flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-4 h-4 opacity-70">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+            <input name="otp_code" type="text" class="grow" placeholder="Enter 6-digit Code" required autocomplete="off"
+                autofocus />
+        </label>
+    </div>
+    <button type="submit" class="btn btn-primary text-white w-full">Verify</button>
+</form>

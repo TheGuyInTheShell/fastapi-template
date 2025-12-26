@@ -34,6 +34,9 @@ class User(BaseAsync):
 
     full_name: Mapped[str] = mapped_column(nullable=False)
 
+    otp_secret: Mapped[str] = mapped_column(String, nullable=True)
+    otp_enabled: Mapped[bool] = mapped_column(default=False)
+
     __table_args__ = (
         Index(
             "ix_user_tsv",

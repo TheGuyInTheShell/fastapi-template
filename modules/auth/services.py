@@ -50,6 +50,7 @@ async def authenticade_user(db: AsyncSession, username: str, password: str) -> R
             email=user.email,
             full_name=user.full_name,
             role=user.role_ref,
+            otp_enabled=user.otp_enabled,
         )
         return result
     except ValueError as e:
