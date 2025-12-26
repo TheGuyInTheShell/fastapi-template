@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +11,15 @@ from modules.users.models import User
 from core.cache import Cache
 
 from .schemas import RQUser, RQUserLogin, RSUser, RSUserTokenData
-from .services import authenticade_user, create_token, create_user, get_user
+from .services import (
+    authenticade_user,
+    create_refresh_token,
+    create_token,
+    create_user,
+    decode_token,
+    get_user,
+    REFRESH_TOKEN_EXPIRE_MINUTES,
+)
 
 # prefix /auth
 router = APIRouter()
@@ -33,7 +45,8 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
             raise HTTPException(
                 status_code=401, detail="Incorrect username or password"
             )
-        expires_time = 1200
+        
+        # Create access token
         access_token = create_token(
             data={
                 "sub": user.username,
@@ -41,32 +54,118 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
                 "role": user.role,
                 "full_name": user.full_name,
                 "id": user.uid,
-            },
-            expires_time=expires_time,
+            }
         )
         
-        # Import Response to set cookies
-        from fastapi.responses import JSONResponse
+        # Create refresh token
+        refresh_token = create_refresh_token(
+            data={
+                "sub": user.username,
+                "email": user.email,
+                "role": user.role,
+                "full_name": user.full_name,
+                "id": user.uid,
+            }
+        )
         
-        # Create response with JWT in body
+        # Create response with JWTs in body (optional for refresh_token, but useful)
         response = JSONResponse(
-            content={"access_token": access_token, "token_type": "bearer"}
+            content={
+                "access_token": access_token, 
+                "refresh_token": refresh_token,
+                "token_type": "bearer"
+            }
         )
         
-        # Set JWT in HTTP-only cookie for browser access
+        # Set Access Token in HTTP-only cookie (existing behavior)
         response.set_cookie(
             key="access_token",
             value=access_token,
             httponly=True,
-            max_age=expires_time,
+            # max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, # Use if imported or hardcode
             samesite="lax",
-            # secure=True,  # Uncomment in production with HTTPS
+            # secure=True,
+        )
+
+        # Set Refresh Token in HTTP-only cookie
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            max_age=REFRESH_TOKEN_EXPIRE_MINUTES * 60,
+            path="/auth/refresh",
+            samesite="lax",
+            # secure=True,
         )
         
         return response
     except ValueError as e:
         print(e)
         raise e
+
+
+@router.post("/refresh", tags=[tag])
+async def refresh_token_endpoint(
+    request: Request,
+    response: Response,
+    refresh_token: Optional[str] = Cookie(None)
+):
+    if not refresh_token:
+        # Also check Authorization header or body if needed, but cookie is primary
+        raise HTTPException(
+            status_code=401, detail="Refresh token missing"
+        )
+        
+    token_data = decode_token(refresh_token)
+    
+    # decode_token returns a dict or TokenData. Based on services.py it returns jwt.decode result which is dict but typed as TokenData. 
+    # Let's assume dict access for safety or convert to model.
+    if not token_data:
+        raise HTTPException(
+            status_code=401, detail="Invalid refresh token"
+        )
+        
+    # Check token type
+    # If token_data is a dict:
+    type_ = token_data.get("type") if isinstance(token_data, dict) else getattr(token_data, "type", None)
+    
+    if type_ != "refresh":
+         raise HTTPException(
+            status_code=401, detail="Invalid token type"
+        )
+
+    # Allow token rotation? For now just issue new access token.
+    # We can also issue a new refresh token if we want to rotate them.
+    
+    # Extract user data
+    username = token_data.get("sub") if isinstance(token_data, dict) else token_data.sub
+    email = token_data.get("email") if isinstance(token_data, dict) else token_data.email
+    role = token_data.get("role") if isinstance(token_data, dict) else token_data.role
+    full_name = token_data.get("full_name") if isinstance(token_data, dict) else token_data.full_name
+    uid = token_data.get("id") if isinstance(token_data, dict) else token_data.id
+
+    new_access_token = create_token(
+        data={
+            "sub": username,
+            "email": email,
+            "role": role,
+            "full_name": full_name,
+            "id": uid,
+        }
+    )
+    
+    response = JSONResponse(
+        content={"access_token": new_access_token, "token_type": "bearer"}
+    )
+    
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        samesite="lax",
+    )
+    
+    return response
 
 
 @router.post("/sign-up", response_model=RSUser, tags=[tag])

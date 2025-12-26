@@ -17,7 +17,7 @@ async def initialize_subscriber_role(db: AsyncSession) -> Role:
         subscriber_role = query.scalar_one_or_none()
         
         if subscriber_role:
-            print("✓ Subscriber role already exists")
+            print("[v] Subscriber role already exists")
             return subscriber_role
         
         # Create subscriber role
@@ -29,11 +29,11 @@ async def initialize_subscriber_role(db: AsyncSession) -> Role:
             disabled=False
         ).save(db)
         
-        print(f"✓ Created subscriber role")
+        print(f"[v] Created subscriber role")
         return subscriber_role
         
     except Exception as e:
-        print(f"✗ Error creating subscriber role: {e}")
+        print(f"[x] Error creating subscriber role: {e}")
         raise e
 
 
@@ -59,7 +59,7 @@ async def initialize_subscriber(session_factory):
         print("="*50 + "\n")
         
     except Exception as e:
-        print(f"\n✗ Subscriber initialization failed: {e}\n")
+        print(f"\n[x] Subscriber initialization failed: {e}\n")
         raise e
     finally:
         await db.close()

@@ -57,6 +57,10 @@ async def authenticade_user(db: AsyncSession, username: str, password: str) -> R
         raise e
     
 
+ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
+REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+
+
 async def create_user(db: AsyncSession, user_data: RQUser)-> dict | None:
     try:
         subscriber_role = await initialize_subscriber_role(db)
@@ -82,11 +86,22 @@ async def create_user(db: AsyncSession, user_data: RQUser)-> dict | None:
 
 def create_token(data: dict, expires_time: Union[float, None] = None) -> str:
     if expires_time is None:
-        expires = time.time() + 600
+        expires = time.time() + (ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     else:
         expires = time.time() + expires_time
     copy_user = data.copy()
-    copy_user.update({"exp": expires})
+    copy_user.update({"exp": expires, "type": "access"})
+    token_jwt = jwt.encode(copy_user, key=SECRET_KEY_JWT, algorithm=USED_ALGORITHM)
+    return token_jwt
+
+
+def create_refresh_token(data: dict, expires_time: Union[float, None] = None) -> str:
+    if expires_time is None:
+        expires = time.time() + (REFRESH_TOKEN_EXPIRE_MINUTES * 60)
+    else:
+        expires = time.time() + expires_time
+    copy_user = data.copy()
+    copy_user.update({"exp": expires, "type": "refresh"})
     token_jwt = jwt.encode(copy_user, key=SECRET_KEY_JWT, algorithm=USED_ALGORITHM)
     return token_jwt
 

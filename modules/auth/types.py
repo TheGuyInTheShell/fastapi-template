@@ -9,5 +9,6 @@ class TokenData(BaseModel):
     full_name: str
     exp: str
     iat: str
-    jti: str
-    iss: str
+    jti: str | None = None
+    iss: str | None = None
+    type: str | None = None
