@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from datetime import datetime
 from typing import Any, List, Literal, Self, Sequence, Set
+from functools import lru_cache
 
 from sqlalchemy import (
     TIMESTAMP,
@@ -73,14 +74,17 @@ class BaseAsync(DeclarativeBase):
     is_deleted: Mapped[bool] = mapped_column(default=False)
 
     @classmethod
+    @lru_cache(maxsize=24)
     def get_deleted(cls) -> Table:
         return cls.deleted
     
     @classmethod
+    @lru_cache(maxsize=24)
     def get_exists(cls) -> Table:
         return cls.exists
     
     @classmethod
+    @lru_cache(maxsize=24)
     def touple_to_dict(cls, arr: Sequence[Self]) -> List[Self]:
         mapped = get_mapper(cls)
         result = []
@@ -99,6 +103,7 @@ class BaseAsync(DeclarativeBase):
         return self
     
     @classmethod
+    @lru_cache(maxsize=24)
     def create_global_views(cls):
         async def create(cls: type[Self]):
             sync_conn = SessionSync()
@@ -142,6 +147,7 @@ class BaseAsync(DeclarativeBase):
         return reg
     
     @classmethod
+    @lru_cache(maxsize=24)
     async def update(cls, db: AsyncSession, id: int | str, data: dict):
         updated_at = datetime.now()
         data.update({"updated_at": updated_at})
@@ -154,8 +160,8 @@ class BaseAsync(DeclarativeBase):
         await db.refresh(reg)
         return reg
     
-    @cache_db(ttl=60, prefix="find_one")
     @classmethod
+    @lru_cache(maxsize=24)
     async def find_one(cls, db: AsyncSession, id: str | int) -> type[Self]:
         query = select(cls).where(cls.id == id) if type(id) == int else select(cls).where(cls.uid == id)
         result = (await db.execute(query)).scalar_one_or_none()
@@ -166,6 +172,7 @@ class BaseAsync(DeclarativeBase):
         return result
 
     @classmethod
+    @lru_cache(maxsize=24)
     async def find_all(cls, db: AsyncSession, status: Literal["deleted", "exists", "all"] = 'all', filters: dict = dict() ) -> List[Self]:
         base_query =  select(cls).filter_by(**filters)
         if status == 'deleted':
@@ -176,11 +183,13 @@ class BaseAsync(DeclarativeBase):
         return result
     
     @classmethod
+    @lru_cache(maxsize=24)
     def get_order_by(cls, order_by: str) -> Column:
         table = Table(cls.__tablename__, MetaData(), autoload_with=engineSync)
         return table.c.get(order_by)
 
     @classmethod
+    @lru_cache(maxsize=24)
     async def find_some(cls, db: AsyncSession, pag: int = 1, order_by: str = None, ord: str = 'asc', status: Literal["deleted", "exists", "all"] = 'all', filters: dict = dict() ) -> List[Self]:
         
         # Determine the source and initial query
@@ -233,11 +242,13 @@ class BaseAsync(DeclarativeBase):
         return result if status == 'all' else cls.touple_to_dict(result) 
     
     @classmethod
+    @lru_cache(maxsize=24)
     async def find_by_colunm(cls, db: AsyncSession, column: str, value: Any):
         result = (await db.execute(select(cls).where(getattr(cls, column) == value)))
         return result
     
     @classmethod
+    @lru_cache(maxsize=24)
     async def find_by_specification(cls, db: AsyncSession, specification: dict):
         result = (await db.execute(select(cls).where(**specification)))
         return result

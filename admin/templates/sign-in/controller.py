@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
-from modules.auth.services import authenticade_user, create_token
+from modules.auth.services import authenticade_user, create_token, create_refresh_token, REFRESH_TOKEN_EXPIRE_MINUTES
 from .services import has_permission
 
 class InitTemplate:
@@ -62,6 +62,16 @@ class InitTemplate:
                     expires_time=expires_time,
                 )
 
+                refresh_token = create_refresh_token(
+                    data={
+                        "sub": user.username,
+                        "email": user.email,
+                        "role": user.role,
+                        "full_name": user.full_name,
+                        "id": user.uid,
+                    }
+                )
+
                 response = self.templates.TemplateResponse(
                     f"partials/sign-in.html",
                     context={"request": request, "success": True},
@@ -71,7 +81,15 @@ class InitTemplate:
                     value=access_token,
                     httponly=True,
                     secure=True,
-                    samesite="strict",
+                    samesite="lax",
+                )
+                response.set_cookie(
+                    key="refresh_token",
+                    value=refresh_token,
+                    httponly=True,
+                    secure=True, 
+                    samesite="lax",
+                    path="/auth/refresh"
                 )
                 return response
             except HTTPException as e:
