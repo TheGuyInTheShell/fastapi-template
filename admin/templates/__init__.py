@@ -22,6 +22,7 @@ from core.database import SessionAsync
 import asyncio
 import os
 import dotenv
+
 dotenv.load_dotenv()
 mode = os.getenv("MODE")
 from typing import List, Dict, Any
@@ -29,19 +30,13 @@ from typing import List, Dict, Any
 
 def init_admin(templates: Jinja2Templates, app: FastAPI) -> List[Dict[str, Any]]:
 
-
     @app.get("/favicon.ico")
-
     async def favicon():
 
         return FileResponse("admin/static/favicon.ico")
 
-    
-
-
     module_names = [f for f in os.listdir("admin/templates")]
     routes = []
-
 
     for module_name in module_names:
 
@@ -55,38 +50,27 @@ def init_admin(templates: Jinja2Templates, app: FastAPI) -> List[Dict[str, Any]]
             print(f"Importing ADMIN module {module_name}")
 
             router: APIRouter = module.InitTemplate(templates).add_all()
-            
 
             # Apply dependencies when including the router, not after
             # if mode develoment not apply role verify cookie
 
-            dependencies = [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" else []
+            dependencies = (
+                [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" else []
+            )
 
             if mode == "DEVELOPMENT":
                 dependencies = []
 
-
             app.include_router(
-
-               router, 
-
-               prefix=f"/admin/{module_name}", 
-
-               tags=[f"view - {module_name}"],
-
-               dependencies=dependencies
-
+                router,
+                prefix=f"/admin/{module_name}",
+                tags=[f"view - {module_name}"],
+                dependencies=dependencies,
             )
-
-
 
         except ValueError as e:
 
             print(f"Error importing module {module_name}: {e}")
             continue
-    
-    return [{
-                "routes": app.routes.copy(),
-                "type": "ADMIN"
-            }]
-        
+
+    return [{"routes": app.routes.copy(), "type": "ADMIN"}]

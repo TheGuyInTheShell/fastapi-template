@@ -3,4 +3,4 @@ from fastapi.responses import JSONResponse
 
 
 def json_encoder_response(data: any):
-    return JSONResponse(content=jsonable_encoder(data), status_code=200) 
+    return JSONResponse(content=jsonable_encoder(data), status_code=200)

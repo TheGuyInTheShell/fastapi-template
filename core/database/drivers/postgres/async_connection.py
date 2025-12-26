@@ -10,33 +10,36 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 DEBUG = True if os.getenv("MODE") == "DEVELOPMENT" else False
 
-# SQLALCHEMY 
+# SQLALCHEMY
 engineAsync = None
+
 
 def init_async_engine():
     global engineAsync
     while engineAsync is None:
         try:
             engineAsync = engineAsync = create_async_engine(
-            url=f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
-            echo = DEBUG,
-            pool_pre_ping = True,
-            pool_size = 10,
-            max_overflow = 20,
-            pool_timeout = 30,
-            query_cache_size=1200,
+                url=f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+                echo=DEBUG,
+                pool_pre_ping=True,
+                pool_size=10,
+                max_overflow=20,
+                pool_timeout=30,
+                query_cache_size=1200,
             )
             break
         except KeyboardInterrupt:
             break
         except Exception as e:
-            print('try')
+            print("try")
             print(e)
             time.sleep(10)
+
 
 init_async_engine()
 
 SessionAsync = async_sessionmaker(engineAsync)
+
 
 async def get_async_db():
     db = SessionAsync()

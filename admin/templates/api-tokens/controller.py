@@ -7,6 +7,7 @@ from fastapi import Depends
 from modules.roles.models import Role
 from core.database import SessionAsync
 
+
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
         self.templates = templates
@@ -15,7 +16,9 @@ class InitTemplate:
     def add_page(self):
 
         @self.router.get("", response_class=HTMLResponse)
-        async def main_api_tokens(request: Request, db: SessionAsync = Depends(get_async_db)):
+        async def main_api_tokens(
+            request: Request, db: SessionAsync = Depends(get_async_db)
+        ):
             roles: List[Role] = await Role.find_all(db)
             return self.templates.TemplateResponse(
                 "pages/api-tokens.html",

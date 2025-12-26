@@ -3,6 +3,7 @@ import redis as redis_sync
 from typing import Any
 from ..base import BaseCacheBackend
 
+
 class RedisCacheBackend(BaseCacheBackend):
     def __init__(self, host: str, port: int):
         self._host = host
@@ -14,18 +15,14 @@ class RedisCacheBackend(BaseCacheBackend):
     def _connect(self):
         # Initialize Sync Client
         self._sync_client = redis_sync.Redis(
-            host=self._host,
-            port=self._port,
-            decode_responses=True
+            host=self._host, port=self._port, decode_responses=True
         )
         # Check connection
         self._sync_client.ping()
 
         # Initialize Async Client
         self._async_client = redis.Redis(
-            host=self._host,
-            port=self._port,
-            decode_responses=True
+            host=self._host, port=self._port, decode_responses=True
         )
 
     async def get(self, key: str) -> Any:

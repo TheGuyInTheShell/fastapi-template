@@ -16,6 +16,7 @@ class RSPermission(BaseModel):
     action: str
     description: str
 
+
 class RSPermissionList(BaseModel):
     data: list[RSPermission] | List = []
     total: int = 0
@@ -26,4 +27,3 @@ class RSPermissionList(BaseModel):
     has_prev: bool | None = False
     next_page: int | None = 0
     prev_page: int | None = 0
-

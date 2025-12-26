@@ -10,6 +10,7 @@ from modules.roles.models import Role
 from modules.permissions.models import Permission
 from core.database import SessionAsync
 
+
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
         self.templates = templates
@@ -17,11 +18,15 @@ class InitTemplate:
 
     def add_page(self):
         @self.router.get("", response_class=HTMLResponse)
-        async def roles_page(request: Request, db: AsyncSession = Depends(get_async_db)):
+        async def roles_page(
+            request: Request, db: AsyncSession = Depends(get_async_db)
+        ):
             # Get all roles (filter out deleted ones)
-            all_roles = await Role.find_some(db, pag=1, ord="asc", status="all", filters={})
+            all_roles = await Role.find_some(
+                db, pag=1, ord="asc", status="all", filters={}
+            )
             roles = [r for r in all_roles if not r.is_deleted]
-            
+
             return self.templates.TemplateResponse(
                 "pages/roles.html",
                 context={
@@ -31,11 +36,13 @@ class InitTemplate:
             )
 
         @self.router.get("/create", response_class=HTMLResponse)
-        async def create_role_page(request: Request, db: AsyncSession = Depends(get_async_db)):
+        async def create_role_page(
+            request: Request, db: AsyncSession = Depends(get_async_db)
+        ):
             # Get all permissions for multi-select
             all_perms = await Permission.find_all(db, status="exists")
             all_permissions = [p for p in all_perms]
-            
+
             return self.templates.TemplateResponse(
                 "pages/roles_create.html",
                 context={
@@ -60,14 +67,14 @@ class InitTemplate:
                     description=description,
                     level=level,
                     permissions=permissions if permissions else [],
-                    disabled=False
+                    disabled=False,
                 )
                 await role.save(db)
-                
+
                 # Get all permissions for re-rendering form
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
-                
+
                 return self.templates.TemplateResponse(
                     "pages/roles_create.html",
                     context={
@@ -101,7 +108,7 @@ class InitTemplate:
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
                 role_permission_uids = set(role.permissions)
-                
+
                 return self.templates.TemplateResponse(
                     "pages/roles_edit.html",
                     context={
@@ -128,20 +135,20 @@ class InitTemplate:
             try:
                 # Update role with new data including permissions
                 role = await Role.update(
-                    db, 
-                    role_id, 
+                    db,
+                    role_id,
                     {
-                        "name": name, 
-                        "description": description, 
+                        "name": name,
+                        "description": description,
                         "level": level,
-                        "permissions": permissions if permissions else []
-                    }
+                        "permissions": permissions if permissions else [],
+                    },
                 )
-                
+
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
                 role_permission_uids = set(role.permissions)
-                
+
                 return self.templates.TemplateResponse(
                     "pages/roles_edit.html",
                     context={
@@ -158,7 +165,7 @@ class InitTemplate:
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
                 role_permission_uids = set(role.permissions)
-                
+
                 return self.templates.TemplateResponse(
                     "pages/roles_edit.html",
                     context={
@@ -186,7 +193,7 @@ class InitTemplate:
                 print(e)
                 return HTMLResponse(
                     content=f'<div class="alert alert-error"><span>Error: {str(e)}</span></div>',
-                    status_code=400
+                    status_code=400,
                 )
 
     def add_all(self):

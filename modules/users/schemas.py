@@ -7,12 +7,14 @@ from pydantic import BaseModel, EmailStr
 class Roles(Enum):
     SUPERADMIN = "SUPERADMIN"
 
+
 class RQUser(BaseModel):
     username: str
     role: str
     password: str
     email: str
     full_name: str
+
 
 # PYDANTIC
 class RSUser(BaseModel):
@@ -22,6 +24,7 @@ class RSUser(BaseModel):
     email: EmailStr
     role: str
     created_at: datetime
+
 
 class RSUserTokenData(BaseModel):
     _id: str
@@ -33,7 +36,8 @@ class RSUserTokenData(BaseModel):
 
 class INUser(RSUser):
     password: str
-    
+
+
 class RQUserLogin(BaseModel):
     username: str
     password: str

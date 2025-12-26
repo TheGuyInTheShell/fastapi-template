@@ -3,21 +3,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
 from .schemas import RQAssignPermission, RQRemovePermission, RSRolePermissions
-from .services import assign_permission_to_role, remove_permission_from_role, get_role_permissions
+from .services import (
+    assign_permission_to_role,
+    remove_permission_from_role,
+    get_role_permissions,
+)
 from core.cache import Cache
 
 router = APIRouter()
 
 cache = Cache()
 
-tag = 'role_permissions'
+tag = "role_permissions"
 
 
-@router.get('/role/{role_id}', response_model=RSRolePermissions, status_code=200, tags=[tag])
+@router.get(
+    "/role/{role_id}", response_model=RSRolePermissions, status_code=200, tags=[tag]
+)
 @cache.cache_endpoint(ttl=60, namespace="role-permissions")
 async def get_role_permissions_endpoint(
-    role_id: str, 
-    db: AsyncSession = Depends(get_async_db)
+    role_id: str, db: AsyncSession = Depends(get_async_db)
 ) -> RSRolePermissions:
     """Get all permissions assigned to a role"""
     try:
@@ -28,10 +33,9 @@ async def get_role_permissions_endpoint(
         raise e
 
 
-@router.post('/assign', response_model=RSRolePermissions, status_code=200, tags=[tag])
+@router.post("/assign", response_model=RSRolePermissions, status_code=200, tags=[tag])
 async def assign_permission(
-    request: RQAssignPermission,
-    db: AsyncSession = Depends(get_async_db)
+    request: RQAssignPermission, db: AsyncSession = Depends(get_async_db)
 ) -> RSRolePermissions:
     """Assign a permission to a role"""
     try:
@@ -43,10 +47,9 @@ async def assign_permission(
         raise e
 
 
-@router.post('/remove', response_model=RSRolePermissions, status_code=200, tags=[tag])
+@router.post("/remove", response_model=RSRolePermissions, status_code=200, tags=[tag])
 async def remove_permission_from_role(
-    request: RQRemovePermission,
-    db: AsyncSession = Depends(get_async_db)
+    request: RQRemovePermission, db: AsyncSession = Depends(get_async_db)
 ) -> RSRolePermissions:
     """Remove a permission from a role"""
     try:

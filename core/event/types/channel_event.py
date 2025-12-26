@@ -4,6 +4,7 @@ from .event import ABCEvent, TAction
 
 CallsType = Callable[[tuple[tuple, dict, Any]], Any]
 
+
 class ABCChannelEvent(ABC):
 
     def __init__(self):
@@ -16,15 +17,20 @@ class ABCChannelEvent(ABC):
         pass
 
     @abstractmethod
-    def subscribe_to(self, event_key: str, action: TAction = "before", handler: Union[Callable[..., Any], Callable[..., Awaitable]] = None) -> Callable[..., Any]:
+    def subscribe_to(
+        self,
+        event_key: str,
+        action: TAction = "before",
+        handler: Union[Callable[..., Any], Callable[..., Awaitable]] = None,
+    ) -> Callable[..., Any]:
 
         pass
-    
+
     @abstractmethod
     def listen_to(self, event_key: str):
 
         pass
-    
+
     @abstractmethod
     def with_args_types(self, event: ABCEvent):
 

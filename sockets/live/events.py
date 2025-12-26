@@ -11,8 +11,6 @@ from core.middlewares.jwt_verify_socket import wrap_init_connect
 from .services import Streaming
 
 
-
-
 def socket_config(sio: AsyncServer, app: FastAPI, module_name: str):
 
     namespace = f"/{module_name}"
@@ -27,13 +25,10 @@ def socket_config(sio: AsyncServer, app: FastAPI, module_name: str):
             result = await handler(sid, environ, auth)
             if result:
                 await sio.emit(
-                    event='connect_info',
-                    data={
-                        'message': 'Connection successful!',
-                        'status': 'ready'
-                    },
+                    event="connect_info",
+                    data={"message": "Connection successful!", "status": "ready"},
                     room=sid,
-                    namespace=namespace
+                    namespace=namespace,
                 )
             return result
 
@@ -46,9 +41,5 @@ def socket_config(sio: AsyncServer, app: FastAPI, module_name: str):
 
         # asyncio.ensure_future(streaming.send('0'), loop=asyncio.get_event_loop())
 
-
-
     except ValueError as e:
         print(e)
-
-

@@ -17,6 +17,7 @@ class RSMenu(BaseModel):
     file_route: str
     active: bool
 
+
 class RSMenuList(BaseModel):
     data: list[RSMenu] | List = []
     total: int = 0

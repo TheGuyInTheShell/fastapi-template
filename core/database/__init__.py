@@ -5,13 +5,11 @@ import os
 load_dotenv()
 
 
-
 def to_tsvector_ix(*columns):
 
     s = " || ' ' || ".join(columns)
 
     return func.to_tsvector(literal("english"), text(s))
-
 
 
 driver = os.getenv("DB_DRIVER")

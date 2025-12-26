@@ -7,6 +7,7 @@ from core.database import get_async_db
 from modules.users.models import User
 from modules.roles.models import Role
 
+
 class InitTemplate:
     def __init__(self, templates: Jinja2Templates):
         self.templates = templates
@@ -14,16 +15,21 @@ class InitTemplate:
 
     def add_page(self):
         @self.router.get("", response_class=HTMLResponse)
-        async def users_page(request: Request, ord_by: str = "id", pag: int = 1, ord: str = "desc", db: AsyncSession = Depends(get_async_db)):
+        async def users_page(
+            request: Request,
+            ord_by: str = "id",
+            pag: int = 1,
+            ord: str = "desc",
+            db: AsyncSession = Depends(get_async_db),
+        ):
 
             # Get all users with roles
             users = await User.find_some(db, status="exists", pag=pag, ord=ord)
 
             roles_in_users = await Role.find_all(db)
 
+            roles_by_id = {}
 
-            roles_by_id = {} 
-            
             for role in roles_in_users:
                 roles_by_id[role.uid] = role
 
@@ -41,50 +47,56 @@ class InitTemplate:
             )
 
         @self.router.get("/edit/{uid}", response_class=HTMLResponse)
-        async def get_edit_page(request: Request, uid: str, db: AsyncSession = Depends(get_async_db)):
+        async def get_edit_page(
+            request: Request, uid: str, db: AsyncSession = Depends(get_async_db)
+        ):
             user = await User.find_one(db, uid)
             roles = await Role.find_all(db)
-            
+
             return self.templates.TemplateResponse(
                 "pages/users_edit.html",
                 context={
                     "request": request,
                     "user": user,
                     "roles": roles,
-                    "success": None
-                }
+                    "success": None,
+                },
             )
 
         @self.router.post("/edit/{uid}", response_class=HTMLResponse)
         async def post_edit_page(
-            request: Request, 
+            request: Request,
             uid: str,
             username: str = Form(...),
             full_name: str = Form(...),
             email: str = Form(...),
             role_uid: str = Form(...),
-            db: AsyncSession = Depends(get_async_db)
+            db: AsyncSession = Depends(get_async_db),
         ):
             try:
-                await User.update(db, uid, {
-                    "username": username,
-                    "full_name": full_name,
-                    "email": email,
-                    "role_ref": role_uid
-                })
-                
+                await User.update(
+                    db,
+                    uid,
+                    {
+                        "username": username,
+                        "full_name": full_name,
+                        "email": email,
+                        "role_ref": role_uid,
+                    },
+                )
+
                 # Fetch updated data to re-render if needed, or just redirect/show success
                 user = await User.find_one(db, uid)
                 roles = await Role.find_all(db)
-                
+
                 return self.templates.TemplateResponse(
                     "pages/users_edit.html",
                     context={
                         "request": request,
                         "user": user,
                         "roles": roles,
-                        "success": True
-                    }
+                        "success": True,
+                    },
                 )
             except Exception as e:
                 user = await User.find_one(db, uid)
@@ -96,11 +108,9 @@ class InitTemplate:
                         "user": user,
                         "roles": roles,
                         "success": False,
-                        "detail": str(e)
-                    }
+                        "detail": str(e),
+                    },
                 )
-
-        
 
     def add_all(self):
         self.add_page()

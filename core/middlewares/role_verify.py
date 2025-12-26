@@ -28,6 +28,7 @@ from .jwt_verify import JWT_VERIFY
 
 import os
 import dotenv
+
 dotenv.load_dotenv()
 
 mode = os.getenv("MODE")
@@ -40,21 +41,23 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
     if mode == "DEVELOPMENT":
         return ROLE_VERIFY_PASS
 
-    async def ROLE_VERIFY_CURRY(request: Request, response: Response, access_token: str = Depends(oauth2_schema)) -> RSUser:
+    async def ROLE_VERIFY_CURRY(
+        request: Request, response: Response, access_token: str = Depends(oauth2_schema)
+    ) -> RSUser:
         try:
             db = SessionAsync()
             try:
                 payload = await JWT_VERIFY(access_token)
             except Exception:
                 payload = None
-            
+
             # If access_token invalid, try refresh token from header
             if not payload:
                 refresh_token = request.headers.get("refresh-token")
                 # Also check x-refresh-token just in case
                 if not refresh_token:
                     refresh_token = request.headers.get("x-refresh-token")
-                    
+
                 if refresh_token:
                     refresh_payload = decode_token(refresh_token)
                     if refresh_payload and refresh_payload.get("type") == "refresh":
@@ -73,21 +76,29 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                         response.headers["new-access-token"] = new_access_token
 
             if not payload:
-                 raise HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User unauthorized",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
             role: Role = await Role.find_one(db, payload["role"])
-            
+
             permissions_users = set(role.permissions)
 
-            name, = request.scope["route"].name,
+            (name,) = (request.scope["route"].name,)
 
             method = request.method
 
-            permission_require = (await db.execute(select(Permission).where(Permission.name==name, Permission.action==method, Permission.type == api_type))).scalar_one_or_none()
+            permission_require = (
+                await db.execute(
+                    select(Permission).where(
+                        Permission.name == name,
+                        Permission.action == method,
+                        Permission.type == api_type,
+                    )
+                )
+            ).scalar_one_or_none()
 
             asyncio.ensure_future(db.close())
 
@@ -98,14 +109,10 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
             else:
 
                 raise HTTPException(
-
-                status_code=status.HTTP_401_UNAUTHORIZED,
-
-                detail="User unauthorized",
-
-                headers={"WWW-Authenticate": "Bearer"},
-
-            )
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User unauthorized",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
         except Exception as e:
             raise e

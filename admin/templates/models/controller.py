@@ -17,7 +17,7 @@ class InitTemplate:
         async def models_diagram_page(request: Request):
             # Generate the Mermaid diagram syntax
             diagram_syntax = generate_mermaid_diagram(BaseAsync)
-            
+
             return self.templates.TemplateResponse(
                 "pages/models_diagram.html",
                 context={

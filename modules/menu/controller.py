@@ -14,7 +14,8 @@ router = APIRouter()
 
 cache = Cache()
 
-tag = 'menu'
+tag = "menu"
+
 
 @router.get("/id/{id}", response_model=RSMenu, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="menu")
@@ -64,9 +65,7 @@ async def get_menus(
 
 
 @router.post("/", response_model=RSMenu, status_code=201, tags=[tag])
-async def create_menu(
-    menu: RQMenu, db: AsyncSession = Depends(get_async_db)
-) -> RSMenu:
+async def create_menu(menu: RQMenu, db: AsyncSession = Depends(get_async_db)) -> RSMenu:
     try:
         result = await Menu(**menu.model_dump()).save(db)
         return result

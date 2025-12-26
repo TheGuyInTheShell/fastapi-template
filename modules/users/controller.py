@@ -16,21 +16,24 @@ router = APIRouter()
 
 cache = Cache()
 
-oauth2_schema = OAuth2PasswordBearer('/token')
+oauth2_schema = OAuth2PasswordBearer("/token")
 
-tag = 'users'
+tag = "users"
 
-@router.get('/me', response_model=RSUserTokenData, tags=[tag])
+
+@router.get("/me", response_model=RSUserTokenData, tags=[tag])
 @cache.cache_endpoint(ttl=120, namespace="users")
 async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
     try:
         if not token:
-            raise HTTPException(status_code=401, detail="No autorizado", headers={
-                    "WWW-Authenticate": "Bearer"
-                })
+            raise HTTPException(
+                status_code=401,
+                detail="No autorizado",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         user_data = decode_token(token)
         return RSUserTokenData(
-            id=user_data.id, 
+            id=user_data.id,
             username=user_data.sub,
             role=user_data.role,
             full_name=user_data.full_name,
@@ -39,13 +42,13 @@ async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
     except ValueError as e:
         print(e)
         return "Error"
-    
-    
-@router.get('', tags=[tag])
+
+
+@router.get("", tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="users")
 async def get_users(db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await User.find_some(db, status='exists')
+        result = await User.find_some(db, status="exists")
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

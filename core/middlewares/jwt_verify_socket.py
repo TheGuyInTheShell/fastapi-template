@@ -6,6 +6,7 @@ from modules.auth.services import decode_token
 
 DEBUG = True if os.getenv("MODE") == "DEVELOPMENT" else False
 
+
 async def JWT_VERIFY_SOCKET(jwt: str):
     try:
         if DEBUG:
@@ -20,7 +21,7 @@ async def JWT_VERIFY_SOCKET(jwt: str):
     except ValueError as e:
         print(e)
         return False
-    
+
 
 def wrap_init_connect(sio: AsyncServer):
     async def init_connect(sid: str, _, auth: Dict[str, str]):
@@ -33,15 +34,16 @@ def wrap_init_connect(sio: AsyncServer):
 
             if not jwt:
                 return False
-            
+
             is_auth = await JWT_VERIFY_SOCKET(jwt)
-                    
-            if is_auth: 
+
+            if is_auth:
                 sio.session(sid)
                 return True
-            
+
         except ValueError as e:
             print(e)
-        
+
         return False
+
     return init_connect

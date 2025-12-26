@@ -24,7 +24,7 @@ USED_ALGORITHM = os.environ.get("JWT_ALG")
 
 async def get_user(db: AsyncSession, username: str) -> User | None:
     try:
-        query = await User.find_by_colunm(db, 'username', username)
+        query = await User.find_by_colunm(db, "username", username)
         user = query.scalar_one_or_none()
         return user
     except ValueError as e:
@@ -55,13 +55,13 @@ async def authenticade_user(db: AsyncSession, username: str, password: str) -> R
     except ValueError as e:
         print(e)
         raise e
-    
+
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 
-async def create_user(db: AsyncSession, user_data: RQUser)-> dict | None:
+async def create_user(db: AsyncSession, user_data: RQUser) -> dict | None:
     try:
         subscriber_role = await initialize_subscriber_role(db)
         user = await User(
@@ -70,7 +70,7 @@ async def create_user(db: AsyncSession, user_data: RQUser)-> dict | None:
             email=user_data.email,
             full_name=user_data.full_name,
             role_ref=subscriber_role.uid,
-            ).save(db)
+        ).save(db)
 
         return {
             "uid": user.uid,
@@ -82,7 +82,7 @@ async def create_user(db: AsyncSession, user_data: RQUser)-> dict | None:
     except ValueError as e:
         print(e)
         raise e
-    
+
 
 def create_token(data: dict, expires_time: Union[float, None] = None) -> str:
     if expires_time is None:
@@ -108,7 +108,9 @@ def create_refresh_token(data: dict, expires_time: Union[float, None] = None) ->
 
 def decode_token(token: str) -> TokenData | None:
     try:
-        decode_cotent: TokenData = jwt.decode(token, key=SECRET_KEY_JWT, algorithms=USED_ALGORITHM)
-        return decode_cotent if decode_cotent['exp'] >= time.time() else None
+        decode_cotent: TokenData = jwt.decode(
+            token, key=SECRET_KEY_JWT, algorithms=USED_ALGORITHM
+        )
+        return decode_cotent if decode_cotent["exp"] >= time.time() else None
     except:
         return None

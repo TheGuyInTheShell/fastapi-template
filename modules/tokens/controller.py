@@ -81,4 +81,3 @@ async def update_token(
     except Exception as e:
         print(e)
         raise e
-

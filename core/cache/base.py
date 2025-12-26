@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+
 class BaseCacheBackend(ABC):
-    
+
     @abstractmethod
     async def get(self, key: str) -> Any:
         pass

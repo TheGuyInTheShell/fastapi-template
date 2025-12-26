@@ -2,6 +2,7 @@ import time
 from typing import Optional, Any
 from .base import BaseCacheBackend
 
+
 class InMemoryCacheBackend(BaseCacheBackend):
     def __init__(self):
         self._cache = {}

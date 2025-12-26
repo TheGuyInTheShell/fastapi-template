@@ -10,12 +10,14 @@ class RQRole(BaseModel):
     level: int
     permissions: list[str]
 
+
 class RSRole(BaseModel):
     uid: str
     name: str
     description: str
     level: int
     permissions: list[str]
+
 
 class RSRoleList(BaseModel):
     data: list[RSRole] | List = []

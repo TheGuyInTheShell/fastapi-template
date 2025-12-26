@@ -5,9 +5,9 @@ from .jwt_verify import JWT_VERIFY
 from .role_verify import ROLE_VERIFY
 
 
-def initialazer(app = FastAPI()):
+def initialazer(app=FastAPI()):
     origins = [
-        "*",   # Vue app
+        "*",  # Vue app
     ]
     app.add_middleware(
         CORSMiddleware,

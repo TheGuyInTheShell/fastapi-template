@@ -14,11 +14,14 @@ router = APIRouter()
 
 cache = Cache()
 
-tag = 'permissions'
+tag = "permissions"
 
-@router.get('/id/{id}', response_model=RSPermission, status_code=200, tags=[tag])
+
+@router.get("/id/{id}", response_model=RSPermission, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="permissions")
-async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
+async def get_Permission(
+    id: str, db: AsyncSession = Depends(get_async_db)
+) -> RSPermission:
     try:
         result = await Permission.find_one(db, id)
         return result
@@ -27,22 +30,26 @@ async def get_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> R
         raise e
 
 
-@router.get('/', response_model=RSPermissionList, status_code=200, tags=[tag])
+@router.get("/", response_model=RSPermissionList, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="permissions")
-async def get_Permissions(pag: Optional[int] = 1, 
-                            ord: Literal["asc", "desc"] = "asc", 
-                            status: Literal["deleted", "exists", "all"] = "exists", 
-                            db: AsyncSession = Depends(get_async_db)
-                            ) -> RSPermissionList:
+async def get_Permissions(
+    pag: Optional[int] = 1,
+    ord: Literal["asc", "desc"] = "asc",
+    status: Literal["deleted", "exists", "all"] = "exists",
+    db: AsyncSession = Depends(get_async_db),
+) -> RSPermissionList:
     try:
         result = await Permission.find_some(db, pag, ord, status)
-        result = map(lambda x: RSPermission(
-                 uid=x.uid,
-                 action=x.action,
-                 description=x.description,
-                 name=x.name,
-                 type=x.type,
-             ), result)
+        result = map(
+            lambda x: RSPermission(
+                uid=x.uid,
+                action=x.action,
+                description=x.description,
+                name=x.name,
+                type=x.type,
+            ),
+            result,
+        )
         return RSPermissionList(
             data=list(result),
             total=0,
@@ -52,36 +59,45 @@ async def get_Permissions(pag: Optional[int] = 1,
             has_next=False,
             has_prev=False,
             next_page=0,
-            prev_page=0           
+            prev_page=0,
         )
     except Exception as e:
         print(e)
         raise e
 
-@router.get('/all', response_model=RSPermissionList, status_code=200, tags=[tag])
+
+@router.get("/all", response_model=RSPermissionList, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="permissions")
-async def get_all_Permissions(status: Literal["deleted", "exists", "all"] = "exists", db: AsyncSession = Depends(get_async_db)) -> RSPermissionList:
+async def get_all_Permissions(
+    status: Literal["deleted", "exists", "all"] = "exists",
+    db: AsyncSession = Depends(get_async_db),
+) -> RSPermissionList:
     try:
         result = await Permission.find_all(db, status)
-        result = map(lambda x: RSPermission(
-                 uid=x.uid,
-                 action=x.action,
-                 description=x.description,
-                 name=x.name,
-                 type=x.type,
-             ), result)
+        result = map(
+            lambda x: RSPermission(
+                uid=x.uid,
+                action=x.action,
+                description=x.description,
+                name=x.name,
+                type=x.type,
+            ),
+            result,
+        )
         result = list(result)
         return RSPermissionList(
             data=result,
-            total=len(result),      
+            total=len(result),
         )
     except Exception as e:
         print(e)
         raise e
 
 
-@router.post('/', response_model=RSPermission, status_code=201, tags=[tag])
-async def create_Permission(permission: RQPermission, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
+@router.post("/", response_model=RSPermission, status_code=201, tags=[tag])
+async def create_Permission(
+    permission: RQPermission, db: AsyncSession = Depends(get_async_db)
+) -> RSPermission:
     try:
         result = await Permission(**permission.model_dump()).save(db)
         return result
@@ -90,7 +106,7 @@ async def create_Permission(permission: RQPermission, db: AsyncSession = Depends
         raise e
 
 
-@router.delete('/id/{id}', status_code=204, tags=[tag])
+@router.delete("/id/{id}", status_code=204, tags=[tag])
 async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await Permission.delete(db, id)
@@ -99,8 +115,10 @@ async def delete_Permission(id: str, db: AsyncSession = Depends(get_async_db)) -
         raise e
 
 
-@router.put('/id/{id}', response_model=RSPermission, status_code=200, tags=[tag])
-async def update_Permission(id: str, permission: RQPermission, db: AsyncSession = Depends(get_async_db)) -> RSPermission:
+@router.put("/id/{id}", response_model=RSPermission, status_code=200, tags=[tag])
+async def update_Permission(
+    id: str, permission: RQPermission, db: AsyncSession = Depends(get_async_db)
+) -> RSPermission:
     try:
         result = await Permission.update(db, id, permission.model_dump())
         return result

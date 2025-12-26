@@ -27,7 +27,8 @@ router = APIRouter()
 cache = Cache()
 
 oauth2_schema = OAuth2PasswordBearer("auth/sign-in")
-tag = 'auth'
+tag = "auth"
+
 
 @router.get("/", tags=[tag])
 @cache.cache_endpoint(ttl=120, namespace="auth")
@@ -45,7 +46,7 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
             raise HTTPException(
                 status_code=401, detail="Incorrect username or password"
             )
-        
+
         # Create access token
         access_token = create_token(
             data={
@@ -56,7 +57,7 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
                 "id": user.uid,
             }
         )
-        
+
         # Create refresh token
         refresh_token = create_refresh_token(
             data={
@@ -67,16 +68,16 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
                 "id": user.uid,
             }
         )
-        
+
         # Create response with JWTs in body (optional for refresh_token, but useful)
         response = JSONResponse(
             content={
-                "access_token": access_token, 
+                "access_token": access_token,
                 "refresh_token": refresh_token,
-                "token_type": "bearer"
+                "token_type": "bearer",
             }
         )
-        
+
         # Set Access Token in HTTP-only cookie (existing behavior)
         response.set_cookie(
             key="access_token",
@@ -97,7 +98,7 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
             samesite="lax",
             # secure=True,
         )
-        
+
         return response
     except ValueError as e:
         print(e)
@@ -106,42 +107,44 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
 
 @router.post("/refresh", tags=[tag])
 async def refresh_token_endpoint(
-    request: Request,
-    response: Response,
-    refresh_token: Optional[str] = Cookie(None)
+    request: Request, response: Response, refresh_token: Optional[str] = Cookie(None)
 ):
     if not refresh_token:
         # Also check Authorization header or body if needed, but cookie is primary
-        raise HTTPException(
-            status_code=401, detail="Refresh token missing"
-        )
-        
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
     token_data = decode_token(refresh_token)
-    
-    # decode_token returns a dict or TokenData. Based on services.py it returns jwt.decode result which is dict but typed as TokenData. 
+
+    # decode_token returns a dict or TokenData. Based on services.py it returns jwt.decode result which is dict but typed as TokenData.
     # Let's assume dict access for safety or convert to model.
     if not token_data:
-        raise HTTPException(
-            status_code=401, detail="Invalid refresh token"
-        )
-        
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
     # Check token type
     # If token_data is a dict:
-    type_ = token_data.get("type") if isinstance(token_data, dict) else getattr(token_data, "type", None)
-    
+    type_ = (
+        token_data.get("type")
+        if isinstance(token_data, dict)
+        else getattr(token_data, "type", None)
+    )
+
     if type_ != "refresh":
-         raise HTTPException(
-            status_code=401, detail="Invalid token type"
-        )
+        raise HTTPException(status_code=401, detail="Invalid token type")
 
     # Allow token rotation? For now just issue new access token.
     # We can also issue a new refresh token if we want to rotate them.
-    
+
     # Extract user data
     username = token_data.get("sub") if isinstance(token_data, dict) else token_data.sub
-    email = token_data.get("email") if isinstance(token_data, dict) else token_data.email
+    email = (
+        token_data.get("email") if isinstance(token_data, dict) else token_data.email
+    )
     role = token_data.get("role") if isinstance(token_data, dict) else token_data.role
-    full_name = token_data.get("full_name") if isinstance(token_data, dict) else token_data.full_name
+    full_name = (
+        token_data.get("full_name")
+        if isinstance(token_data, dict)
+        else token_data.full_name
+    )
     uid = token_data.get("id") if isinstance(token_data, dict) else token_data.id
 
     new_access_token = create_token(
@@ -153,18 +156,18 @@ async def refresh_token_endpoint(
             "id": uid,
         }
     )
-    
+
     response = JSONResponse(
         content={"access_token": new_access_token, "token_type": "bearer"}
     )
-    
+
     response.set_cookie(
         key="access_token",
         value=new_access_token,
         httponly=True,
         samesite="lax",
     )
-    
+
     return response
 
 

@@ -9,7 +9,7 @@
 #                 db.add(EmployeePhoto(
 #                     imagen=filename,
 #                     empleado=id
-#                 ))     
+#                 ))
 #         except ValueError as err:
 #             print(err)
 #             return

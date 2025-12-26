@@ -55,38 +55,57 @@ else:
 app = FastAPI(
     title="FastAPI Template",
     version=version,
-    docs_url=docs_url, redoc_url=redoc_url, openapi_url=openapi_url)
+    docs_url=docs_url,
+    redoc_url=redoc_url,
+    openapi_url=openapi_url,
+)
 
 
-
-@app.get("/docs", include_in_schema=False, response_class=HTMLResponse, dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)])
+@app.get(
+    "/docs",
+    include_in_schema=False,
+    response_class=HTMLResponse,
+    dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)],
+)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
-        openapi_url="/openapi.json",    
+        openapi_url="/openapi.json",
         title=app.title + " - Docs",
     )
 
-@app.get('/redoc', include_in_schema=False, response_class=HTMLResponse, dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)])
+
+@app.get(
+    "/redoc",
+    include_in_schema=False,
+    response_class=HTMLResponse,
+    dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)],
+)
 async def custom_redoc_html():
     return get_redoc_html(
-        openapi_url="/openapi.json",    
+        openapi_url="/openapi.json",
         title=app.title + " - Redoc",
     )
 
-@app.get('/openapi.json', include_in_schema=False, dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)])
+
+@app.get(
+    "/openapi.json",
+    include_in_schema=False,
+    dependencies=[Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE)],
+)
 async def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=app.title,
-        version=app.version,    
+        version=app.version,
         description=app.description,
         routes=app.routes,
     )
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
 
 app = middlewares.initialazer(app)
 
@@ -135,5 +154,3 @@ BaseAsync.metadata.create_all(engineSync)
 
 
 asyncio.ensure_future(init_auth([*routes, *admin_routes], SessionAsync))
-
-

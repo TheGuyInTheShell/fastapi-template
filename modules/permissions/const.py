@@ -1,5 +1,3 @@
-
-
 admin_type = "ADMIN"
 
 api_type = "API"

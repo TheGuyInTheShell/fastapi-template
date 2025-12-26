@@ -22,7 +22,9 @@ class User(BaseAsync):
 
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
 
-    role_ref: Mapped[str] = mapped_column(String, ForeignKey('roles.uid'), nullable=False) 
+    role_ref: Mapped[str] = mapped_column(
+        String, ForeignKey("roles.uid"), nullable=False
+    )
 
     role: Mapped[Role] = relationship("Role")
 
@@ -31,20 +33,12 @@ class User(BaseAsync):
     email: Mapped[str] = mapped_column(unique=True)
 
     full_name: Mapped[str] = mapped_column(nullable=False)
-    
 
     __table_args__ = (
-
         Index(
-
-            'ix_user_tsv',
-
-            to_tsvector_ix('username', 'email', 'full_name'),
-
-            postgresql_using='gin'
-            ),
-
-            {'extend_existing': True}
-        )
-    
-
+            "ix_user_tsv",
+            to_tsvector_ix("username", "email", "full_name"),
+            postgresql_using="gin",
+        ),
+        {"extend_existing": True},
+    )

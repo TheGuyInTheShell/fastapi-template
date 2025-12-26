@@ -11,12 +11,14 @@ router = APIRouter()
 
 cache = Cache()
 
-tag = 'menu - roles'
-    
+tag = "menu - roles"
 
-@router.get('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
+
+@router.get("id/{id}", response_model=RSMenuRole, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="menu-roles")
-async def get_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
+async def get_menu_role(
+    id: str, db: AsyncSession = Depends(get_async_db)
+) -> RSMenuRole:
     try:
         result = await MenuRole.find_one(db, id)
         return result
@@ -25,23 +27,27 @@ async def get_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> RS
         raise e
 
 
-@router.get('/', response_model=RSMenuRoleList, status_code=200, tags=[tag])
+@router.get("/", response_model=RSMenuRoleList, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="menu-roles")
-async def get_menu_roles(pag: Optional[int] = 1, 
-                            ord: Literal["asc", "desc"] = "asc", 
-                            status: Literal["deleted", "exists", "all"] = "exists", 
-                            db: AsyncSession = Depends(get_async_db)
-                            ) -> RSMenuRoleList:
+async def get_menu_roles(
+    pag: Optional[int] = 1,
+    ord: Literal["asc", "desc"] = "asc",
+    status: Literal["deleted", "exists", "all"] = "exists",
+    db: AsyncSession = Depends(get_async_db),
+) -> RSMenuRoleList:
     try:
         result = await MenuRole.find_some(db, pag, ord, status)
-        result = map(lambda x: RSMenuRole(
-                 uid=x.uid,
-                 description=x.description,
-                 disabled=x.disabled,
-                 name=x.name,
-                 level=x.level,
-                 menus=x.menus,
-             ), result)
+        result = map(
+            lambda x: RSMenuRole(
+                uid=x.uid,
+                description=x.description,
+                disabled=x.disabled,
+                name=x.name,
+                level=x.level,
+                menus=x.menus,
+            ),
+            result,
+        )
         return RSMenuRoleList(
             data=list(result),
             total=0,
@@ -51,15 +57,17 @@ async def get_menu_roles(pag: Optional[int] = 1,
             has_next=False,
             has_prev=False,
             next_page=0,
-            prev_page=0           
+            prev_page=0,
         )
     except Exception as e:
         print(e)
         raise e
 
 
-@router.post('/', response_model=RSMenuRole, status_code=201, tags=[tag])
-async def create_menu_role(menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
+@router.post("/", response_model=RSMenuRole, status_code=201, tags=[tag])
+async def create_menu_role(
+    menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)
+) -> RSMenuRole:
     try:
         result = await MenuRole(**menu_role.model_dump()).save(db)
         return result
@@ -68,7 +76,7 @@ async def create_menu_role(menu_role: RQMenuRole, db: AsyncSession = Depends(get
         raise e
 
 
-@router.delete('id/{id}', status_code=204, tags=[tag])
+@router.delete("id/{id}", status_code=204, tags=[tag])
 async def delete_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await MenuRole.delete(db, id)
@@ -77,8 +85,10 @@ async def delete_menu_role(id: str, db: AsyncSession = Depends(get_async_db)) ->
         raise e
 
 
-@router.put('id/{id}', response_model=RSMenuRole, status_code=200, tags=[tag])
-async def update_menu_role(id: str, menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)) -> RSMenuRole:
+@router.put("id/{id}", response_model=RSMenuRole, status_code=200, tags=[tag])
+async def update_menu_role(
+    id: str, menu_role: RQMenuRole, db: AsyncSession = Depends(get_async_db)
+) -> RSMenuRole:
     try:
         result = await MenuRole.update(db, id, menu_role.model_dump())
         return result
