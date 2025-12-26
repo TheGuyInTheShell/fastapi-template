@@ -107,7 +107,7 @@ class BaseAsync(DeclarativeBase):
     is_deleted: Mapped[bool] = mapped_column(default=False)
 
     @classmethod
-    @alru_cache(maxsize=24)
+    @lru_cache(maxsize=24)
     def get_deleted(cls) -> Table:
         return cls.deleted
 
@@ -118,7 +118,7 @@ class BaseAsync(DeclarativeBase):
         return cls.exists
 
     @classmethod
-    @sync_lru(maxsize=24)
+    @lru_cache(maxsize=24)
     def touple_to_dict(cls, arr: Sequence[Self]) -> List[Self]:
 
         mapped = get_mapper(cls)
