@@ -1,5 +1,8 @@
-<div id="notification">
-    <div class="alert alert-info text-white mb-4">
+<div id="notification" class="flex justify-center items-center flex-col gap-2">
+    <div x-data="spinner" id="spinner" :class="{ hidden: !loading }">
+        <div class="loading loading-spinner"></div>
+    </div>
+    <div class="alert alert-info text-white mb-4 w-full">
         <span>Please enter your 2FA code.</span>
     </div>
 </div>
@@ -19,4 +22,28 @@
         </label>
     </div>
     <button type="submit" class="btn btn-primary text-white w-full">Verify</button>
+    <script>
+        {
+            const form = document.getElementById("sign-in");
+            const spinner = document.getElementById('spinner');
+
+            form.addEventListener('htmx:beforeRequest', function (event) {
+                Alpine.$data(spinner).show();
+            });
+
+            form.addEventListener('htmx:afterOnLoad', function (event) {
+                setTimeout(() => {
+                    if (Alpine.$data(spinner)) {
+                        Alpine.$data(spinner).hide();
+                    }
+                    const target = document.getElementById("notification");
+                    if (target && target.classList.contains("success")) {
+                        setTimeout(() => {
+                            window.location.replace("/admin/dashboard");
+                        }, 1000)
+                    }
+                }, 500)
+            });
+        }
+    </script>
 </form>

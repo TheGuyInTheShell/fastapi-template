@@ -3,12 +3,13 @@ from pydantic import BaseModel
 
 class TokenData(BaseModel):
     sub: str
-    email: str
-    id: str
-    role: str
-    full_name: str
-    exp: str
-    iat: str
+    email: str | None = None
+    id: str | None = None
+    role: str | None = None
+    full_name: str | None = None
+    exp: int | None = None
+    iat: int | None = None
     jti: str | None = None
     iss: str | None = None
     type: str | None = None
+    otp_enabled: bool = False

@@ -5,6 +5,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
+from modules.users.models import User
+from modules.auth.services import decode_token
+
 
 from core.database import get_async_db
 from modules.auth.services import (
@@ -63,7 +66,7 @@ class InitTemplate:
                             "type": "partial_2fa",
                             "role": "guest"
                         }, 
-                        expires_time=5
+                        expires_time=300
                     )
                     
                     return self.templates.TemplateResponse(
@@ -132,17 +135,13 @@ class InitTemplate:
             db: AsyncSession = Depends(get_async_db),
         ):
             try:
-                # 1. Verify Temp Token
-                from modules.auth.services import decode_token
                 payload = decode_token(temp_token)
                 
                 if not payload or payload.get("type") != "partial_2fa":
                     raise HTTPException(status_code=401, detail="Invalid session")
                 
                 uid = payload.get("id")
-                
-                # 2. Get User
-                from modules.users.models import User
+
                 query = await User.find_by_colunm(db, "uid", uid)
                 user = query.scalar_one_or_none()
                 
@@ -163,7 +162,7 @@ class InitTemplate:
                     data={
                         "sub": user.username,
                         "email": user.email,
-                        "role": user.role,
+                        "role": user.role_ref,
                         "full_name": user.full_name,
                         "id": user.uid,
                     },
@@ -174,7 +173,7 @@ class InitTemplate:
                     data={
                         "sub": user.username,
                         "email": user.email,
-                        "role": user.role,
+                        "role": user.role_ref,
                         "full_name": user.full_name,
                         "id": user.uid,
                     }

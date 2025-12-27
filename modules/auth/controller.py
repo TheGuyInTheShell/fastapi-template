@@ -63,7 +63,7 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
                      # Short expiry for this step
                     "role": "guest" # No permissions
                 }, 
-                expires_time=5 # 5 minutes
+                expires_time=300 # 5 minutes
              )
              return JSONResponse(
                  status_code=202, # Accepted

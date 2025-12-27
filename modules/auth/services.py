@@ -91,7 +91,9 @@ def create_token(data: dict, expires_time: Union[float, None] = None) -> str:
     else:
         expires = time.time() + expires_time
     copy_user = data.copy()
-    copy_user.update({"exp": expires, "type": "access"})
+    if "type" not in copy_user:
+        copy_user["type"] = "access"
+    copy_user.update({"exp": expires})
     token_jwt = jwt.encode(copy_user, key=SECRET_KEY_JWT, algorithm=USED_ALGORITHM)
     return token_jwt
 
