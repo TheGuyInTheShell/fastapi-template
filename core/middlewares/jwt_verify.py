@@ -1,7 +1,6 @@
 from fastapi import HTTPException, Request, status
 from modules.auth.services import decode_token, TokenData
 
-
 async def JWT_VERIFY(jwt: str) -> TokenData:
     try:
         if not jwt:

@@ -32,12 +32,20 @@ async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         user_data = decode_token(token)
+
+        if not user_data:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         return RSUserTokenData(
-            id=user_data.id,
-            username=user_data.sub,
-            role=user_data.role,
-            full_name=user_data.full_name,
-            email=user_data.email,
+            uid=user_data.id or "",
+            username=user_data.sub or "",
+            role=user_data.role or "",
+            full_name=user_data.full_name or "",
+            email=user_data.email or "",
         )
     except ValueError as e:
         print(e)

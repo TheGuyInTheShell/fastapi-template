@@ -11,6 +11,7 @@ from modules.users.models import User
 from core.cache import Cache
 
 from .schemas import RQUser, RQUserLogin, RSUser, RSUserTokenData
+from .types import TokenData
 from .services import (
     authenticade_user,
     create_refresh_token,
@@ -147,32 +148,18 @@ async def refresh_token_endpoint(
     if not token_data:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    # Check token type
-    # If token_data is a dict:
-    type_ = (
-        token_data.get("type")
-        if isinstance(token_data, dict)
-        else getattr(token_data, "type", None)
-    )
-
-    if type_ != "refresh":
+    if token_data.type != "refresh":
         raise HTTPException(status_code=401, detail="Invalid token type")
 
     # Allow token rotation? For now just issue new access token.
     # We can also issue a new refresh token if we want to rotate them.
 
     # Extract user data
-    username = token_data.get("sub") if isinstance(token_data, dict) else token_data.sub
-    email = (
-        token_data.get("email") if isinstance(token_data, dict) else token_data.email
-    )
-    role = token_data.get("role") if isinstance(token_data, dict) else token_data.role
-    full_name = (
-        token_data.get("full_name")
-        if isinstance(token_data, dict)
-        else token_data.full_name
-    )
-    uid = token_data.get("id") if isinstance(token_data, dict) else token_data.id
+    username = token_data.sub
+    email = token_data.email
+    role = token_data.role
+    full_name = token_data.full_name
+    uid = token_data.id
 
     new_access_token = create_token(
         data={
@@ -206,10 +193,10 @@ class OTPVerifyRequest(BaseModel):
 async def verify_otp(request: OTPVerifyRequest, db: AsyncSession = Depends(get_async_db)):
     # Decode temp token
     payload = decode_token(request.temp_token)
-    if not payload or payload.get("type") != "partial_2fa":
+    if not payload or payload.type != "partial_2fa":
         raise HTTPException(status_code=401, detail="Invalid session")
     
-    uid = payload.get("id")
+    uid = payload.id
     user_query = await User.find_by_colunm(db, "uid", uid)
     user = user_query.scalar_one_or_none()
     
@@ -278,7 +265,7 @@ async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession
     payload = decode_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    query = await User.find_by_colunm(db, "username", payload.get("sub"))
+    query = await User.find_by_colunm(db, "username", payload.sub)
     user = query.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -333,7 +320,13 @@ async def sign_up(
         result = await create_user(db, form_sign_up)
         if not result:
             raise HTTPException(status_code=500, detail="Error al crear el usuario")
-        return result
+        return RSUser(
+            uid=result.get("uid") or "",
+            username=result.get("username") or "",
+            role=result.get("role") or "",
+            full_name=result.get("full_name") or "",
+            email=result.get("email") or "",
+        )
     except ValueError as e:
         print(e)
         raise e

@@ -60,16 +60,16 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
 
                 if refresh_token:
                     refresh_payload = decode_token(refresh_token)
-                    if refresh_payload and refresh_payload.get("type") == "refresh":
+                    if refresh_payload and refresh_payload.type == "refresh":
                         payload = refresh_payload
                         # Issue new access token
                         new_access_token = create_token(
                             data={
-                                "sub": payload["sub"],
-                                "email": payload["email"],
-                                "role": payload["role"],
-                                "full_name": payload.get("full_name"),
-                                "id": payload.get("id"),
+                                "sub": payload.sub,
+                                "email": payload.email,
+                                "role": payload.role,
+                                "full_name": payload.full_name,
+                                "id": payload.id,
                             }
                         )
                         # Set metadata in response header
@@ -82,7 +82,7 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            role: Role = await Role.find_one(db, payload["role"])
+            role: Role = await Role.find_one(db, payload.role)
 
             permissions_users = set(role.permissions)
 
@@ -102,9 +102,22 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
 
             asyncio.ensure_future(db.close())
 
+            if not permission_require:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User unauthorized",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
             if permission_require.uid in permissions_users:
 
-                return payload
+                return RSUser(
+                    uid=payload.id or "",
+                    username=payload.sub,
+                    email=payload.email or "",
+                    full_name=payload.full_name or "",
+                    role=payload.role or "",
+                )
 
             else:
 

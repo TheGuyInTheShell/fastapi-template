@@ -37,3 +37,10 @@ redis==5.0.1
 opencv-python-headless==4.9.0.80
 fastapi-socketio==0.0.10
 Jinja2==3.1.4
+mypy==1.8.0
+pyright==1.1.345
+pyotp==2.6.0
+qrcode==7.4.2
+prometheus-client==0.17.1
+python-multipart==0.0.6
+cryptography==41.0.5

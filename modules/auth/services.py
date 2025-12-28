@@ -18,8 +18,8 @@ from .types import TokenData
 load_dotenv()
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY_JWT = os.environ.get("JWT_KEY").encode()
-USED_ALGORITHM = os.environ.get("JWT_ALG")
+SECRET_KEY_JWT = os.environ.get("JWT_KEY", default="").encode() # type: ignore
+USED_ALGORITHM = os.environ.get("JWT_ALG", default="HS256")
 
 
 async def get_user(db: AsyncSession, username: str) -> User | None:
@@ -111,9 +111,9 @@ def create_refresh_token(data: dict, expires_time: Union[float, None] = None) ->
 
 def decode_token(token: str) -> TokenData | None:
     try:
-        decode_cotent: TokenData = jwt.decode(
-            token, key=SECRET_KEY_JWT, algorithms=USED_ALGORITHM
+        decode_cotent: dict = jwt.decode(
+            token, key=SECRET_KEY_JWT, algorithms=[USED_ALGORITHM]
         )
-        return decode_cotent if decode_cotent["exp"] >= time.time() else None
+        return TokenData(**decode_cotent) if decode_cotent.get("exp", 0) >= time.time() else None
     except:
         return None

@@ -1,5 +1,5 @@
 from .jwt_verify import JWT_VERIFY
-from modules.auth.services import decode_token, create_token
+from modules.auth.services import decode_token, create_token, TokenData
 import time
 import asyncio
 from fastapi import Request, HTTPException, status, Response
@@ -33,18 +33,18 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
             if refresh_token:
                 # Check refresh token
                 refresh_payload = decode_token(refresh_token)
-                if refresh_payload and refresh_payload.get("type") == "refresh":
+                if refresh_payload and refresh_payload.type == "refresh":
                     # Refresh is valid
-                    payload = refresh_payload
+                    new_payload: TokenData = refresh_payload
 
                     # Create new access token
                     new_access_token = create_token(
                         data={
-                            "sub": payload["sub"],
-                            "email": payload["email"],
-                            "role": payload["role"],
-                            "full_name": payload.get("full_name"),
-                            "id": payload.get("id"),
+                            "sub": new_payload.sub,
+                            "email": new_payload.email,
+                            "role": new_payload.role,
+                            "full_name": new_payload.full_name,
+                            "id": new_payload.id,
                         }
                     )
 
@@ -57,6 +57,8 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
                         samesite="lax",
                     )
 
+                    payload = new_payload
+
         if not payload:
             raise HTTPException(
                 status_code=status.HTTP_302_FOUND,
@@ -64,13 +66,10 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
                 headers={"Location": "/admin/sign-in"},
             )
 
-        # Verify JWT and get payload (already done above)
-        # payload = await JWT_VERIFY(access_token)
-
         db = SessionAsync()
 
         # Get user's role and permissions
-        role: Role = await Role.find_one(db, payload["role"])
+        role: Role = await Role.find_one(db, payload.role)
         if not role:
             await db.close()
             raise HTTPException(
@@ -102,22 +101,22 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
         if not permission_require:
              # No permission requirement found for this route - allow access
             user_data = RSUserTokenData(
-                uid=payload["id"],
-                username=payload["sub"],
-                email=payload["email"],
-                full_name=payload.get("full_name", ""),
-                role=payload["role"],
+                uid=payload.id or "",
+                username=payload.sub,
+                email=payload.email or "",
+                full_name=payload.full_name or "",
+                role=payload.role or "",
             )
             request.state.user = user_data
             return user_data
 
         if permission_require.uid in permissions_users:
             user_data = RSUserTokenData(
-                uid=payload["id"],
-                username=payload["sub"],
-                email=payload["email"],
-                full_name=payload.get("full_name", ""),
-                role=payload["role"],
+                uid=payload.id or "",
+                username=payload.sub,
+                email=payload.email or "",
+                full_name=payload.full_name or "",
+                role=payload.role or "",
             )
             request.state.user = user_data
             return user_data

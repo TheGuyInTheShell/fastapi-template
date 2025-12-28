@@ -13,6 +13,8 @@ Una plantilla completa y lista para producción para construir aplicaciones web 
 
 ### **Autenticación y Seguridad**
 - **JWT (JSON Web Tokens)**: Sistema de autenticación basado en tokens
+- **Refresh Tokens**: Soporte para renovación de sesiones mediante tokens de larga duración (7 días por defecto)
+- **Autenticación de Dos Factores (2FA/OTP)**: Capa extra de seguridad mediante Google Authenticator o similares
 - **OAuth2**: Implementación de flujo OAuth2 con Password Bearer
 - **Sistema de Roles y Permisos**: Control de acceso basado en roles (RBAC)
 - **Generación Automática de Permisos**: Los permisos se generan automáticamente por cada endpoint
@@ -34,7 +36,10 @@ Una plantilla completa y lista para producción para construir aplicaciones web 
 - **Auto-registro de Rutas**: Las rutas se registran automáticamente siguiendo la estructura de carpetas
 - **Separación de Responsabilidades**: Controllers, Services, Models, y Schemas separados
 
-### **Monitoreo y Desarrollo**
+### **Calidad de Código y Tipado**
+- **PEP 561 Compliance**: El proyecto incluye markers `py.typed` para soporte completo de editores y herramientas de tipado.
+- **Mypy Static Analysis**: Configuración de `mypy` integrada para garantizar la seguridad de tipos.
+- **Tipado Estándar**: Uso de `async_sessionmaker[AsyncSession]` y otros tipos modernos de Python.
 - **Prometheus**: Métricas y monitoreo de la aplicación integrado
 - **APScheduler**: Programación de tareas asíncronas y trabajos en segundo plano
 - **Redis**: Caché y almacenamiento de sesiones
@@ -51,6 +56,8 @@ fastapi_template/
 │   │   ├── sync_connection.py    # Conexión síncrona a PostgreSQL
 │   │   ├── base.py               # Modelos base de SQLAlchemy
 │   │   └── utils/                # Utilidades de base de datos (paginación, etc.)
+│   ├── py.typed              # Marker de tipado PEP 561
+│   └── utils/                # Utilidades de base de datos (paginación, etc.)
 │   ├── middlewares/          # Middlewares personalizados
 │   │   ├── jwt_verify.py         # Verificación de tokens JWT
 │   │   └── role_verify.py        # Verificación de permisos por rol
@@ -68,7 +75,8 @@ fastapi_template/
 │   ├── roles/                # Gestión de roles
 │   ├── permissions/          # Gestión de permisos
 │   ├── tokens/               # Gestión de tokens API
-│   └── menu/                 # Sistema de menús dinámicos
+│   ├── menu/                 # Sistema de menús dinámicos
+│   └── py.typed              # Marker de tipado PEP 561
 │       └── role/             # Relación menú-rol
 │
 ├── sockets/                   # WebSockets y Socket.IO
@@ -215,6 +223,16 @@ pm2 start ecosystem.config.js
 docker-compose up -d
 ```
 
+### Análisis Estático de Tipos
+
+El proyecto utiliza `mypy` para garantizar la seguridad de tipos. Para ejecutar el análisis:
+
+```bash
+python -m mypy .
+```
+
+La configuración se encuentra en `mypy.ini`, la cual excluye automáticamente las plantillas del admin para evitar colisiones de nombres de módulos en los controladores.
+
 ## 📚 Módulos y Funcionalidades
 
 ### 1. **Módulo de Autenticación** (`modules/auth/`)
@@ -231,6 +249,12 @@ Gestiona el registro e inicio de sesión de usuarios.
 - Generación de tokens JWT con expiración configurable
 - Validación de credenciales
 - Prevención de usuarios duplicados
+- **Refresh Tokens**: Endpoint `/auth/refresh` para obtener nuevos tokens de acceso sin re-autenticar
+- **2FA/OTP**: Soporte para autenticación de dos factores mediante:
+    - `GET /auth/2fa/setup` - Genera secreto y código QR
+    - `POST /auth/2fa/enable` - Activa 2FA para el usuario
+    - `POST /auth/verify-otp` - Verifica el código OTP durante el login
+    - `POST /auth/2fa/disable` - Desactiva 2FA
 
 ### 2. **Módulo de Usuarios** (`modules/users/`)
 
