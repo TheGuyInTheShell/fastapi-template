@@ -1,14 +1,14 @@
-from typing import List
+from typing import List, Callable
 
 from fastapi.routing import APIRoute, BaseRoute
 from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .models import Permission
 
 
 async def create_permissions_api(
-    routes: List[BaseRoute], sessionAsync: AsyncSession, type: str
+    routes: List[BaseRoute], sessionAsync: async_sessionmaker[AsyncSession], type: str
 ):
     db: AsyncSession = sessionAsync()
     try:

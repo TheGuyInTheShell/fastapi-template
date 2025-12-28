@@ -2,9 +2,9 @@ import os
 from typing import List
 
 from dotenv import load_dotenv
-from passlib.context import CryptContext
+from passlib.context import CryptContext  # type: ignore
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from modules.permissions.models import Permission
 from modules.roles.models import Role
@@ -101,7 +101,7 @@ async def initialize_owner_user(db: AsyncSession, owner_role_uid: str) -> User:
         raise e
 
 
-async def initialize_owner(session_factory):
+async def initialize_owner(session_factory: async_sessionmaker[AsyncSession]):
     """
     Main initialization function to create owner role and user.
     Called on app startup.

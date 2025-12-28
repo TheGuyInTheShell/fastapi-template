@@ -1,8 +1,8 @@
 import tempfile
-from typing import Callable
+from typing import Any, Callable
 
 
-async def save_temp_files(file: any, callback: Callable[[str], any]):
+async def save_temp_files(file: Any, callback: Callable[[str], Any]):
     with tempfile.NamedTemporaryFile(delete=True) as temp:
         data = await file.read()
         temp.write(data)

@@ -3,16 +3,18 @@ from core.services.init_subscriber import initialize_subscriber
 from core.services.init_observer import initialize_observer
 from modules.permissions.services import create_permissions_api
 from typing import List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
 async def init_auth(
-    permissions_routes: List[Dict[str, Any]], sessionAsync: AsyncSession
+    permissions_routes: List[Dict[str, Any]], sessionMaker: async_sessionmaker[AsyncSession]
 ):
+
+
     for permission_routes in permissions_routes:
         await create_permissions_api(
-            permission_routes["routes"], sessionAsync, permission_routes["type"]
+            permission_routes["routes"], sessionMaker, permission_routes["type"]
         )
-    await initialize_owner(sessionAsync)
-    await initialize_subscriber(sessionAsync)
-    await initialize_observer(sessionAsync)
+    await initialize_owner(sessionMaker)
+    await initialize_subscriber(sessionMaker)
+    await initialize_observer(sessionMaker)

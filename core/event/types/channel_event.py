@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Set, Union, Awaitable
+from typing import Any, Callable, Dict, Set, Union, Awaitable, Optional
 from .event import ABCEvent, TAction
 
 CallsType = Callable[[tuple[tuple, dict, Any]], Any]
@@ -21,7 +21,7 @@ class ABCChannelEvent(ABC):
         self,
         event_key: str,
         action: TAction = "before",
-        handler: Union[Callable[..., Any], Callable[..., Awaitable]] = None,
+        handler: Optional[Union[Callable[..., Any], Callable[..., Awaitable]]] = None,
     ) -> Callable[..., Any]:
 
         pass

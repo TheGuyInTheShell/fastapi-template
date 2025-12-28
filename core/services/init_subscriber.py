@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from modules.roles.models import Role
 
@@ -37,7 +37,7 @@ async def initialize_subscriber_role(db: AsyncSession) -> Role:
         raise e
 
 
-async def initialize_subscriber(session_factory):
+async def initialize_subscriber(session_factory: async_sessionmaker[AsyncSession]):
     """
     Main initialization function to create subscriber role.
     Called on app startup.

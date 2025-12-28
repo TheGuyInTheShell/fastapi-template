@@ -9,7 +9,7 @@ def make_hashable(value):
     return value
 
 def async_lru(maxsize=128):
-    cache = {}
+    cache: dict[Any, Any] = {}
     
     def decorator(func):
         @wraps(func)
@@ -44,7 +44,7 @@ def async_lru(maxsize=128):
     return decorator
 
 def sync_lru(maxsize=128):
-    cache = {}
+    cache: dict[Any, Any] = {}
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

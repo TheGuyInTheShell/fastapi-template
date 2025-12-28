@@ -7,7 +7,6 @@ from sockets import init_sockets
 
 load_dotenv()
 
-
 import socketio
 
 from fastapi import FastAPI
