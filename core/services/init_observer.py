@@ -1,0 +1,125 @@
+import os
+from typing import List
+
+from dotenv import load_dotenv
+from passlib.context import CryptContext
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from modules.permissions.models import Permission
+from modules.roles.models import Role
+from modules.users.models import User
+
+load_dotenv()
+
+hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+OBSERVER_USER = os.environ.get("OBSERVER_USER", "observer")
+OBSERVER_EMAIL = os.environ.get("OBSERVER_EMAIL", "observer@admin.com")
+OBSERVER_PASS = os.environ.get("OBSERVER_PASS", "observer")
+
+
+async def initialize_observer_role(db: AsyncSession) -> Role:
+    """
+    Creates or retrieves the observer role with minimal permissions.
+    Observer role can only view metrics (level 50).
+
+    Returns:
+        Role: The observer role instance
+    """
+    try:
+        # Check if observer role already exists
+        query = await Role.find_by_colunm(db, "name", "observer")
+        observer_role = query.scalar_one_or_none()
+
+        if observer_role:
+            print("[v] Observer role already exists")
+            return observer_role
+
+        # Observer role has no permissions - only metrics access controlled separately
+        # Level 50 is below owner (100) but above subscriber
+        
+        observer_role = await Role(
+            name="observer",
+            description="Observer role with metrics access only",
+            level=50,
+            permissions=[],  # No standard route permissions
+            disabled=False,
+        ).save(db)
+
+        print(f"[v] Created observer role (metrics access only)")
+        return observer_role
+
+    except Exception as e:
+        print(f"[x] Error creating observer role: {e}")
+        raise e
+
+
+async def initialize_observer_user(db: AsyncSession, observer_role_uid: str) -> User:
+    """
+    Creates or retrieves the observer user with credentials from environment variables.
+
+    Args:
+        db: Database session
+        observer_role_uid: UID of the observer role
+
+    Returns:
+        User: The observer user instance
+    """
+    try:
+        # Check if observer user already exists
+        query = await User.find_by_colunm(db, "username", OBSERVER_USER)
+        observer_user = query.scalar_one_or_none()
+
+        if observer_user:
+            print(f"[v] Observer user already exists")
+            return observer_user
+
+        # Create observer user
+        observer_user = await User(
+            username=OBSERVER_USER,
+            password=hash_context.hash(OBSERVER_PASS),
+            email=f"{OBSERVER_EMAIL}",
+            full_name="System Observer",
+            role_ref=observer_role_uid,
+        ).save(db)
+
+        print(f"[v] Created observer user")
+        return observer_user
+
+    except Exception as e:
+        print(f"[x] Error creating observer user: {e}")
+        raise e
+
+
+async def initialize_observer(session_factory):
+    """
+    Main initialization function to create observer role and user.
+    Called on app startup.
+
+    Args:
+        session_factory: AsyncSession factory to create database sessions
+    """
+    db: AsyncSession = session_factory()
+    try:
+        print("\n" + "=" * 50)
+        print("Initializing Observer Role and User")
+        print("=" * 50)
+
+        # Create/verify observer role
+        observer_role = await initialize_observer_role(db)
+
+        # Create/verify observer user
+        observer_user = await initialize_observer_user(db, observer_role.uid)
+
+        print("=" * 50)
+        print("Observer initialization completed successfully")
+        print("=" * 50 + "\n")
+        
+        return observer_role.uid  # Return the UID for metrics verification
+
+    except Exception as e:
+        print(f"\n[x] Observer initialization failed: {e}\n")
+        raise e
+    finally:
+        await db.close()

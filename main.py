@@ -36,7 +36,7 @@ from core.routes import api_router, routes
 
 from core.services.init_auth import init_auth
 
-from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.responses import Response
 
 version = "1.0.0"
 
@@ -139,12 +139,6 @@ templates = Jinja2Templates(directory="admin/src")
 admin_routes = init_admin(templates, app)
 
 app.include_router(api_router)
-
-
-# Prometheus
-
-Instrumentator().instrument(app).expose(app)
-
 
 # Database initialization models
 

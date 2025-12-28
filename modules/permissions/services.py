@@ -20,6 +20,7 @@ async def create_permissions_api(
                     )
                     result = permission.scalar_one_or_none()
                     name: str = route.__getattribute__("name")
+                    print(name)
                     methods: set = route.__getattribute__("methods")
                     description: str = route.__getattribute__("path")
                     if result is None:
