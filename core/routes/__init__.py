@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends
 from starlette.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, REGISTRY
 
-from core.database import get_async_db, SessionAsync
-import core.middlewares as middlewares
+from core.database import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from core.middlewares.role_verify_cookie import ROLE_VERIFY_COOKIE
 
 from core.event import ChannelEvent
 from app.modules.roles.models import Role
@@ -27,8 +28,8 @@ async def response():
 # Prometheus - Protected metrics endpoint
 @api_router.get("/metrics", include_in_schema=False)
 async def metrics(
-    user=Depends(middlewares.role_verify_cookie.ROLE_VERIFY_COOKIE),
-    db: SessionAsync = Depends(get_async_db)
+    user=Depends(ROLE_VERIFY_COOKIE),
+    db: AsyncSession = Depends(get_async_db)
 ):
     """
     Prometheus metrics endpoint - protected by authentication and role verification.

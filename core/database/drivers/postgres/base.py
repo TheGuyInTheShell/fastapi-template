@@ -4,7 +4,6 @@ from datetime import datetime
 from functools import wraps
 import json
 from typing import Any, List, Literal, Self, Sequence, Set
-from core.cache.lru import async_lru, sync_lru
 
 from sqlalchemy import (
     TIMESTAMP,
@@ -44,7 +43,6 @@ from .async_connection import get_async_db
 
 from .sync_connection import get_sync_db
 
-from core.cache import cache_db
 
 
 def generate_uuid():
@@ -99,18 +97,15 @@ class BaseAsync(DeclarativeBase):
     is_deleted: Mapped[bool] = mapped_column(default=False)
 
     @classmethod
-    @sync_lru(maxsize=24)
     def get_deleted(cls) -> Table:
         return cls.deleted
 
     @classmethod
-    @sync_lru(maxsize=24)
     def get_exists(cls) -> Table:
 
         return cls.exists
 
     @classmethod
-    @sync_lru(maxsize=24)
     def touple_to_dict(cls, arr: Sequence[Self]) -> List[Self]:
 
         mapped = get_mapper(cls)
@@ -203,13 +198,6 @@ class BaseAsync(DeclarativeBase):
         return reg
 
     @classmethod
-
-    # update shouldn't be cached usually, but keeping consistency if user wanted it?
-
-    # Actually user put it on update, which is weird. Updating should not be cached or should invalidate cache.
-
-    # I will SKIP caching update as it's dangerous/incorrect.
-
     async def update(cls, db: AsyncSession, id: int | str, data: dict):
 
         updated_at = datetime.now()
@@ -237,7 +225,6 @@ class BaseAsync(DeclarativeBase):
         return reg
 
     @classmethod
-    @async_lru(maxsize=24)
     async def find_one(cls, db: AsyncSession, id: str | int) -> type[Self]:
 
         query = (
@@ -258,7 +245,6 @@ class BaseAsync(DeclarativeBase):
         return result
 
     @classmethod
-    @async_lru(maxsize=24)
     async def find_all(
         cls,
         db: AsyncSession,
@@ -284,7 +270,6 @@ class BaseAsync(DeclarativeBase):
         return result
 
     @classmethod
-    @sync_lru(maxsize=24)
     def get_order_by(cls, order_by: str) -> Column:
 
         table = Table(cls.__tablename__, MetaData(), autoload_with=engineSync)
@@ -292,7 +277,6 @@ class BaseAsync(DeclarativeBase):
         return table.c.get(order_by)
 
     @classmethod
-    @async_lru(maxsize=24)
     async def find_some(
         cls,
         db: AsyncSession,

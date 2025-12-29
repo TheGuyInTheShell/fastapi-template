@@ -15,30 +15,27 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 
 async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserTokenData:
-    try:
+    try:        
         # Get access token from cookies
         access_token = request.cookies.get("access_token")
+        refresh_token_cookie = request.cookies.get("refresh_token")
+                
         payload = None
 
         # Try access token
         if access_token:
             try:
                 payload = await JWT_VERIFY(access_token)
-            except Exception:
-                print("Access token is invalid")
+            except Exception as e:
                 payload = None
 
         # If no valid access token, try refresh token
         if not payload:
             refresh_token = request.cookies.get("refresh_token")
             if refresh_token:
-                # Check refresh token
                 refresh_payload = decode_token(refresh_token)
                 if refresh_payload and refresh_payload.type == "refresh":
-                    # Refresh is valid
                     new_payload: TokenData = refresh_payload
-
-                    # Create new access token
                     new_access_token = create_token(
                         data={
                             "sub": new_payload.sub,
@@ -59,6 +56,8 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
                     )
 
                     payload = new_payload
+                else:
+                    payload = None
 
         if not payload:
             raise HTTPException(
@@ -98,9 +97,7 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
         await db.close()
 
         # Check if permission exists and user has it
-        # Check if permission exists and user has it
         if not permission_require:
-             # No permission requirement found for this route - allow access
             user_data = RSUserTokenData(
                 uid=payload.id or "",
                 username=payload.sub,
@@ -129,12 +126,8 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
             )
 
     except HTTPException as e:
-        print(f"Error in ROLE_VERIFY_COOKIE: {e}")
-        # Re-raise HTTP exceptions as-is (don't wrap them)
         raise
     except Exception as e:
-        # Convert any other exception to redirect
-        print(f"Error in ROLE_VERIFY_COOKIE: {e}")
         raise HTTPException(
             status_code=status.HTTP_302_FOUND,
             detail="Authentication error",

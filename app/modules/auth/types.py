@@ -7,8 +7,8 @@ class TokenData(BaseModel):
     id: str | None = None
     role: str | None = None
     full_name: str | None = None
-    exp: int | None = None
-    iat: int | None = None
+    exp: float | int | None = None
+    iat: float | int | None = None
     jti: str | None = None
     iss: str | None = None
     type: str | None = None

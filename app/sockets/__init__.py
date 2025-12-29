@@ -12,7 +12,8 @@ def init_sockets(app: FastAPI):
 
     for module_name in module_names:
 
-        if module_name.find(".py") != -1 or module_name.find("__pycache__") != -1:
+        # Only process directories that are not __pycache__
+        if not os.path.isdir(os.path.join("app/sockets", module_name)) or module_name == "__pycache__":
             continue
 
         namespaces.append(f"/{module_name}")
@@ -31,7 +32,7 @@ def init_sockets(app: FastAPI):
 
         try:
 
-            if module_name.find(".py") != -1 or module_name.find("__pycache__") != -1:
+            if not os.path.isdir(os.path.join("app/sockets", module_name)) or module_name == "__pycache__":
                 continue
 
             module = import_module(f"app.sockets.{module_name}.events")

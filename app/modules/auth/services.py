@@ -86,25 +86,27 @@ async def create_user(db: AsyncSession, user_data: RQUser) -> dict | None:
 
 
 def create_token(data: dict, expires_time: Union[float, None] = None) -> str:
+    current_time = int(time.time())
     if expires_time is None:
-        expires = time.time() + (ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+        expires = current_time + (ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     else:
-        expires = time.time() + expires_time
+        expires = current_time + int(expires_time)
     copy_user = data.copy()
     if "type" not in copy_user:
         copy_user["type"] = "access"
-    copy_user.update({"exp": expires})
+    copy_user.update({"exp": expires, "iat": current_time})
     token_jwt = jwt.encode(copy_user, key=SECRET_KEY_JWT, algorithm=USED_ALGORITHM)
     return token_jwt
 
 
 def create_refresh_token(data: dict, expires_time: Union[float, None] = None) -> str:
+    current_time = int(time.time())
     if expires_time is None:
-        expires = time.time() + (REFRESH_TOKEN_EXPIRE_MINUTES * 60)
+        expires = current_time + (REFRESH_TOKEN_EXPIRE_MINUTES * 60)
     else:
-        expires = time.time() + expires_time
+        expires = current_time + int(expires_time)
     copy_user = data.copy()
-    copy_user.update({"exp": expires, "type": "refresh"})
+    copy_user.update({"exp": expires, "type": "refresh", "iat": current_time})
     token_jwt = jwt.encode(copy_user, key=SECRET_KEY_JWT, algorithm=USED_ALGORITHM)
     return token_jwt
 
@@ -114,6 +116,12 @@ def decode_token(token: str) -> TokenData | None:
         decode_cotent: dict = jwt.decode(
             token, key=SECRET_KEY_JWT, algorithms=[USED_ALGORITHM]
         )
-        return TokenData(**decode_cotent) if decode_cotent.get("exp", 0) >= time.time() else None
-    except:
+        exp_time = decode_cotent.get("exp", 0)
+        current_time = time.time()
+        is_valid_time = exp_time > current_time
+        if not is_valid_time:
+            return None
+
+        return TokenData(**decode_cotent)
+    except Exception as e:
         return None
