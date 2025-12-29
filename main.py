@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import asyncio
 import os
 
-from sockets import init_sockets
+from app.sockets import init_sockets
 
 load_dotenv()
 
@@ -118,7 +118,7 @@ socket_app = init_sockets(app)
 app.mount("/sio", socket_app)
 
 
-app.mount("/public", StaticFiles(directory="public"))
+app.mount("/public", StaticFiles(directory="app/public"))
 
 
 # Node modules

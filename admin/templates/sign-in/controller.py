@@ -5,12 +5,12 @@ from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from modules.users.models import User
-from modules.auth.services import decode_token
+from app.modules.users.models import User
+from app.modules.auth.services import decode_token
 
 
 from core.database import get_async_db
-from modules.auth.services import (
+from app.modules.auth.services import (
     authenticade_user,
     create_token,
     create_refresh_token,
@@ -137,10 +137,10 @@ class InitTemplate:
             try:
                 payload = decode_token(temp_token)
                 
-                if not payload or payload.get("type") != "partial_2fa":
+                if not payload or payload.type != "partial_2fa":
                     raise HTTPException(status_code=401, detail="Invalid session")
                 
-                uid = payload.get("id")
+                uid = payload.id
 
                 query = await User.find_by_colunm(db, "uid", uid)
                 user = query.scalar_one_or_none()
@@ -152,7 +152,7 @@ class InitTemplate:
                     raise HTTPException(status_code=400, detail="2FA not enabled")
 
                 # 3. Verify OTP
-                from modules.auth.otp import verify_otp_code
+                from app.modules.auth.otp import verify_otp_code
                 if not verify_otp_code(user.otp_secret, otp_code):
                      raise HTTPException(status_code=401, detail="Invalid Code")
 

@@ -6,9 +6,9 @@ from passlib.context import CryptContext # type: ignore
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from modules.permissions.models import Permission
-from modules.roles.models import Role
-from modules.users.models import User
+from app.modules.permissions.models import Permission
+from app.modules.roles.models import Role
+from app.modules.users.models import User
 
 load_dotenv()
 

@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from sqlalchemy import Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from modules.users.models import User
+from app.modules.users.models import User
 from core.services.init_subscriber import initialize_subscriber_role
 
 from .schemas import INUser, RQUser, RSUser

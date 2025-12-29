@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 
-from modules.roles.models import Role
-from modules.permissions.models import Permission
+from app.modules.roles.models import Role
+from app.modules.permissions.models import Permission
 from .schemas import RSPermissionDetail, RSRolePermissions
 
 

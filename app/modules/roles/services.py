@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from modules.permissions.models import Permission
+from app.modules.permissions.models import Permission
 
 from .models import Role
 from .schemas import RQRole, RSRole
@@ -9,16 +9,14 @@ from .schemas import RQRole, RSRole
 
 async def create_role(db: AsyncSession, rq_role: RQRole) -> RSRole:
     try:
-        permissions: list[str] = []
+        permissions = []
 
         if rq_role.permissions.__len__() == 0:
             raise HTTPException(
                 status_code=400, detail="Role must have at least one permission"
             )
 
-        rq_role.permissions = tuple(rq_role.permissions)
-
-        for permission in rq_role.permissions:
+        for permission in tuple(rq_role.permissions):
             try:
                 permissions.append((await Permission.find_one(db, permission)).uid)
             except ValueError as e:

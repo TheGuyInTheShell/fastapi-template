@@ -1,18 +1,9 @@
-import os
-import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from dotenv import load_dotenv
 
 from alembic import context
-
-# Add project root to sys.path
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
-
-# Load environment variables
-load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,28 +14,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Database configuration
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-
-# For migrations, we use the sync driver (psycopg2)
-DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-config.set_main_option("sqlalchemy.url", DB_URL)
-
 # add your model's MetaData object here
 # for 'autogenerate' support
-from core.database import BaseAsync
-from modules.users.models import User
-from modules.roles.models import Role
-from modules.permissions.models import Permission
-from modules.tokens.models import ApiToken
-from modules.menu.models import Menu
-from modules.menu.role.models import MenuRole
-
-target_metadata = BaseAsync.metadata
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

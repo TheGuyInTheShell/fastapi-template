@@ -13,9 +13,9 @@ from fastapi.routing import APIRouter
 
 from core.middlewares.role_verify_cookie import ROLE_VERIFY_COOKIE
 
-from modules.permissions.services import create_permissions_api
+from app.modules.permissions.services import create_permissions_api
 
-from modules.permissions.const import admin_type
+from app.modules.permissions.const import admin_type
 
 from core.database import SessionAsync
 
@@ -36,7 +36,6 @@ def init_admin(templates: Jinja2Templates, app: FastAPI) -> List[Dict[str, Any]]
         return FileResponse("admin/static/favicon.ico")
 
     module_names = [f for f in os.listdir("admin/templates")]
-    routes = []
 
     for module_name in module_names:
 

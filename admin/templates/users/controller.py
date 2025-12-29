@@ -4,8 +4,8 @@ from fastapi.routing import APIRouter
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_async_db
-from modules.users.models import User
-from modules.roles.models import Role
+from app.modules.users.models import User
+from app.modules.roles.models import Role
 
 
 class InitTemplate:

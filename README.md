@@ -69,27 +69,26 @@ fastapi_template/
 │   ├── event/                # Sistema de eventos personalizado
 │   └── utils/                # Utilidades generales
 │
-├── modules/                   # Módulos de funcionalidad
-│   ├── auth/                 # Autenticación (sign-in, sign-up)
-│   ├── users/                # Gestión de usuarios
-│   ├── roles/                # Gestión de roles
-│   ├── permissions/          # Gestión de permisos
-│   ├── tokens/               # Gestión de tokens API
-│   ├── menu/                 # Sistema de menús dinámicos
-│   └── py.typed              # Marker de tipado PEP 561
-│       └── role/             # Relación menú-rol
-│
-├── sockets/                   # WebSockets y Socket.IO
-│   ├── main.py               # Inicialización de eventos Socket.IO
-│   └── live/                 # Eventos en tiempo real
+├── app/                       # Directorio principal de la aplicación
+│   ├── modules/               # Módulos de funcionalidad
+│   │   ├── auth/             # Autenticación (sign-in, sign-up)
+│   │   ├── users/            # Gestión de usuarios
+│   │   ├── roles/            # Gestión de roles
+│   │   ├── permissions/      # Gestión de permisos
+│   │   ├── tokens/           # Gestión de tokens API
+│   │   └── menu/             # Sistema de menús dinámicos
+│   │
+│   ├── sockets/               # WebSockets y Socket.IO
+│   │   ├── __init__.py       # Inicialización de eventos Socket.IO
+│   │   └── live/             # Eventos en tiempo real
+│   │
+│   └── public/                # Archivos públicos estáticos
 │
 ├── admin/                     # Panel administrativo
 │   ├── src/                  # Plantillas Jinja2
 │   ├── static/               # Archivos estáticos (CSS, JS, imágenes)
 │   ├── templates/            # Configuración de plantillas
 │   └── global/               # Configuración global del admin
-│
-├── public/                    # Archivos públicos estáticos
 ├── logs/                      # Archivos de registro
 ├── main.py                    # Punto de entrada de la aplicación
 ├── requirements.txt           # Dependencias Python

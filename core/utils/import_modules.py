@@ -4,14 +4,21 @@ from fastapi import APIRouter, Depends
 from core.middlewares.role_verify import ROLE_VERIFY
 import asyncio
 from core.database import SessionAsync
-from modules.permissions.services import create_permissions_api
+from app.modules.permissions.services import create_permissions_api
 
 
-def import_modules(router: APIRouter, base_path: str = "modules", prefix: str = ""):
+def import_modules(router: APIRouter, base_path: str = "app/modules", prefix: str = ""):
     for root, dirs, files in os.walk(base_path):
         if "controller.py" in files:
             module_path = root.replace(os.sep, ".")
-            module_name = module_path.split(".", 1)[1]  # Remove the base_path part
+            # Extract module name relative to base_path
+            if module_path.startswith(base_path.replace("/", ".")):
+                # Remove base_path prefix and leading dot
+                module_name = module_path[len(base_path.replace("/", ".")):].lstrip(".")
+            else:
+                # Fallback: skip this directory if it doesn't match expected pattern
+                print(f"Skipping unexpected path: {root}")
+                continue
             try:
                 module = import_module(f"{module_path}.controller")
                 route_prefix = f"{prefix}/{module_name.replace('.', '/')}"

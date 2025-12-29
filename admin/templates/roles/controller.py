@@ -6,8 +6,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
-from modules.roles.models import Role
-from modules.permissions.models import Permission
+from app.modules.roles.models import Role
+from app.modules.permissions.models import Permission
 from core.database import SessionAsync
 
 

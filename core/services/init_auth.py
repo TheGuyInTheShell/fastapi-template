@@ -1,7 +1,7 @@
 from core.services.init_owner import initialize_owner
 from core.services.init_subscriber import initialize_subscriber
 from core.services.init_observer import initialize_observer
-from modules.permissions.services import create_permissions_api
+from app.modules.permissions.services import create_permissions_api
 from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 

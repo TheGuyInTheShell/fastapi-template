@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from modules.roles.models import Role
+from app.modules.roles.models import Role
 
 
 async def initialize_subscriber_role(db: AsyncSession) -> Role:

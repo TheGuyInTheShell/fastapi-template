@@ -7,7 +7,7 @@ from fastapi.security import OAuth2, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
-from modules.users.models import User
+from app.modules.users.models import User
 from core.cache import Cache
 
 from .schemas import RQUser, RQUserLogin, RSUser, RSUserTokenData

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 def init_sockets(app: FastAPI):
 
-    module_names = [f for f in os.listdir("sockets")]
+    module_names = [f for f in os.listdir("app/sockets")]
 
     namespaces = []
 
@@ -34,7 +34,7 @@ def init_sockets(app: FastAPI):
             if module_name.find(".py") != -1 or module_name.find("__pycache__") != -1:
                 continue
 
-            module = import_module(f"sockets.{module_name}.events")
+            module = import_module(f"app.sockets.{module_name}.events")
 
             print(f"Importing SOCKET module: {module_name}")
 

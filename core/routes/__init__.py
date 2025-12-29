@@ -8,7 +8,7 @@ from core.database import get_async_db, SessionAsync
 import core.middlewares as middlewares
 
 from core.event import ChannelEvent
-from modules.roles.models import Role
+from app.modules.roles.models import Role
 from fastapi import HTTPException
 
 channel = ChannelEvent()

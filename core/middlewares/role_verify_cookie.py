@@ -1,15 +1,15 @@
 from .jwt_verify import JWT_VERIFY
-from modules.auth.services import decode_token, create_token, TokenData
+from app.modules.auth.services import decode_token, create_token, TokenData
 import time
 import asyncio
 from fastapi import Request, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.future import select
-from modules.roles.models import Role
-from modules.permissions.models import Permission
-from modules.users.models import User
-from modules.users.schemas import RSUserTokenData
-from modules.permissions.const import admin_type
+from app.modules.roles.models import Role
+from app.modules.permissions.models import Permission
+from app.modules.users.models import User
+from app.modules.users.schemas import RSUserTokenData
+from app.modules.permissions.const import admin_type
 from core.database import get_async_db, SessionAsync
 from starlette.status import HTTP_401_UNAUTHORIZED
 
@@ -25,6 +25,7 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
             try:
                 payload = await JWT_VERIFY(access_token)
             except Exception:
+                print("Access token is invalid")
                 payload = None
 
         # If no valid access token, try refresh token
@@ -127,18 +128,15 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
                 headers={"Location": "/admin/sign-in"},
             )
 
-    except HTTPException:
-        # Re-raise HTTP exceptions as-is
-        raise HTTPException(
-            status_code=status.HTTP_302_FOUND,
-            detail="Invalid role",
-            headers={"Location": "/admin/sign-in"},
-        )
+    except HTTPException as e:
+        print(f"Error in ROLE_VERIFY_COOKIE: {e}")
+        # Re-raise HTTP exceptions as-is (don't wrap them)
+        raise
     except Exception as e:
-        # Convert any other exception to 401 Unauthorized
+        # Convert any other exception to redirect
         print(f"Error in ROLE_VERIFY_COOKIE: {e}")
         raise HTTPException(
             status_code=status.HTTP_302_FOUND,
-            detail="Invalid role",
+            detail="Authentication error",
             headers={"Location": "/admin/sign-in"},
         )

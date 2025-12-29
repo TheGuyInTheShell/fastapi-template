@@ -7,14 +7,14 @@ from sqlalchemy.future import select
 
 from core.database import get_async_db
 
-from modules.auth.controller import oauth2_schema
+from app.modules.auth.controller import oauth2_schema
 
-from modules.auth.schemas import RSUser
-from modules.auth.services import decode_token, create_token
+from app.modules.auth.schemas import RSUser
+from app.modules.auth.services import decode_token, create_token
 
-from modules.permissions.models import Permission
-from modules.roles.models import Role
-from modules.permissions.const import api_type
+from app.modules.permissions.models import Permission
+from app.modules.roles.models import Role
+from app.modules.permissions.const import api_type
 
 from core.database import SessionAsync
 

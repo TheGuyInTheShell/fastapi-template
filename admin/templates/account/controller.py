@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
 from core.database import get_async_db
-from modules.users.models import User
-from modules.auth.otp import generate_otp_secret, get_otp_provisioning_uri, generate_qr_code_base64, verify_otp_code
+from app.modules.users.models import User
+from app.modules.auth.otp import generate_otp_secret, get_otp_provisioning_uri, generate_qr_code_base64, verify_otp_code
 from core.middlewares.role_verify_cookie import ROLE_VERIFY_COOKIE
 
 class InitTemplate:

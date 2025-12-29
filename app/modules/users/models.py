@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import to_tsvector_ix
 
-from modules.roles.models import Role
+from app.modules.roles.models import Role
 from core.database import BaseAsync
 
 
