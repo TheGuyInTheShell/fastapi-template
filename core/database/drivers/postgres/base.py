@@ -19,6 +19,7 @@ from sqlalchemy import (
     select,
     text,
     update,
+    Row,
 )
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -98,12 +99,12 @@ class BaseAsync(DeclarativeBase):
 
     @classmethod
     def get_deleted(cls) -> Table:
-        return cls.deleted
+        return cls.deleted # type: ignore
 
     @classmethod
     def get_exists(cls) -> Table:
 
-        return cls.exists
+        return cls.exists # type: ignore
 
     @classmethod
     def touple_to_dict(cls, arr: Sequence[Self]) -> List[Self]:
@@ -119,7 +120,7 @@ class BaseAsync(DeclarativeBase):
 
             for i, column in enumerate(colums):
 
-                obj.__setattr__(column.name, touple[i])
+                obj.__setattr__(column.name, touple[i]) # type: ignore
 
             result.append(obj)
         return result
@@ -225,7 +226,7 @@ class BaseAsync(DeclarativeBase):
         return reg
 
     @classmethod
-    async def find_one(cls, db: AsyncSession, id: str | int) -> type[Self]:
+    async def find_one(cls, db: AsyncSession, id: str | int) -> Self:
 
         query = (
             select(cls).where(cls.id == id)
@@ -267,10 +268,10 @@ class BaseAsync(DeclarativeBase):
             if status == "all"
             else (await db.execute(base_query)).all()
         )
-        return result
+        return result # type: ignore
 
     @classmethod
-    def get_order_by(cls, order_by: str) -> Column:
+    def get_order_by(cls, order_by: str) -> Column | None:
 
         table = Table(cls.__tablename__, MetaData(), autoload_with=engineSync)
 
@@ -281,7 +282,7 @@ class BaseAsync(DeclarativeBase):
         cls,
         db: AsyncSession,
         pag: int = 1,
-        order_by: str = None,
+        order_by: str = "id",
         ord: str = "asc",
         status: Literal["deleted", "exists", "all"] = "all",
         filters: dict = {},
@@ -303,7 +304,7 @@ class BaseAsync(DeclarativeBase):
 
         else:  # status == 'all'
 
-            selectable = cls.__table__
+            selectable = cls.__table__ # type: ignore
 
             base_query = select(cls).filter_by(**filters)
 
@@ -361,11 +362,10 @@ class BaseAsync(DeclarativeBase):
 
         query = base_query.limit(10).offset((pag - 1) * 10)
 
-        result = await db.execute(query)
 
-        result = result.scalars().all() if status == "all" else result.all()
-
-        return result if status == "all" else cls.touple_to_dict(result)
+        exec_result = await db.execute(query)
+        rows = exec_result.scalars().all() if status == "all" else exec_result.all()
+        return rows if status == "all" else cls.touple_to_dict(rows) # type: ignore
 
     @classmethod
     async def find_by_colunm(cls, db: AsyncSession, column: str, value: Any):
@@ -382,7 +382,7 @@ class BaseAsync(DeclarativeBase):
 
 class BaseSync(DeclarativeBase):
 
-    uid: Mapped[str] = Column(
+    uid = Column(
         String,
         unique=True,
         nullable=False,
@@ -391,14 +391,14 @@ class BaseSync(DeclarativeBase):
         default=UUID(),
     )
 
-    id: Mapped[int] = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
 
-    created_at: Mapped[datetime] = Column(TIMESTAMP, server_default=func.now())
+    created_at = Column(TIMESTAMP, server_default=func.now())
 
-    updated_at: Mapped[datetime] = Column(
+    updated_at = Column(
         TIMESTAMP, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
-    is_deleted: Mapped[bool] = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False)
 
-    deleted_at: Mapped[datetime] = Column(TIMESTAMP, nullable=True)
+    deleted_at = Column(TIMESTAMP, nullable=True)
