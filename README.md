@@ -4,10 +4,10 @@ Una plantilla completa y lista para producción para construir aplicaciones web 
 
 ## 🚀 Características Principales
 
-### **Backend Robusto**
+### **Base de Datos y Modelado**
 - **FastAPI**: Framework web moderno y de alto rendimiento para construir APIs con Python 3.11+
-- **Uvicorn**: Servidor ASGI de alto rendimiento con soporte asíncrono
 - **SQLAlchemy**: ORM potente con soporte para conexiones síncronas y asíncronas
+- **Migraciones con Alembic**: Sistema de control de versiones para la base de datos
 - **PostgreSQL**: Base de datos relacional con soporte completo async/sync
 - **Pydantic**: Validación de datos y serialización automática
 
@@ -136,11 +136,34 @@ pip install -r requirements.txt
 npm install
 ```
 
-5. **Configurar variables de entorno**
+4. **Configurar variables de entorno**
 ```bash
 cp .env.example .env
 # Editar .env con tus configuraciones
 ```
+
+### **Migraciones de Base de Datos**
+Este proyecto utiliza **Alembic** para gestionar los cambios en el esquema de la base de datos.
+
+#### Comandos Útiles:
+- **Generar una nueva migración automáticamente**:
+  ```bash
+  alembic revision --autogenerate -m "descripción del cambio"
+  ```
+- **Aplicar migraciones a la base de datos**:
+  ```bash
+  alembic upgrade head
+  ```
+- **Revertir la última migración**:
+  ```bash
+  alembic downgrade -1
+  ```
+- **Ver el historial de migraciones**:
+  ```bash
+  alembic history --verbose
+  ```
+
+Las configuraciones de Alembic se encuentran en `alembic.ini` y `migrations/env.py`. El sistema carga automáticamente la conexión desde tu archivo `.env`.
 
 Configuración del archivo `.env`:
 ```env
