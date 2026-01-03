@@ -15,6 +15,12 @@ from core.services.init_subscriber import initialize_subscriber_role
 from .schemas import INUser, RQUser, RSUser
 from .types import TokenData
 
+import bcrypt
+from bcrypt import _bcrypt # type: ignore
+
+if not hasattr(bcrypt, "__about__"):
+   setattr(bcrypt, "__about__", type("About", (object,), {"__version__": _bcrypt.__version_ex__}))
+
 load_dotenv()
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
