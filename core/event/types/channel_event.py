@@ -35,3 +35,11 @@ class ABCChannelEvent(ABC):
     def with_args_types(self, event: ABCEvent):
 
         pass
+
+
+    @abstractmethod
+    def _iterator(self, event: ABCEvent, func: Callable, *args, **kwargs):
+
+        pass
+
+

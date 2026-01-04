@@ -29,6 +29,8 @@ class Event(ABCEvent):
 
     _after_listeners: Set[Callable]
 
+    channelRef: "ABCChannelEvent"
+
     def __init__(self):
 
         self._before_listeners: Set[Callable] = set()
@@ -38,6 +40,9 @@ class Event(ABCEvent):
     def add_listener(self, action: TAction, handler: Callable):
 
         self.add_action(action, handler)
+
+        print(f"add listener {action}", self._before_listeners, self._after_listeners)
+
         return self
 
     def add_action(self, action: TAction, handler: Callable):
@@ -117,9 +122,9 @@ class Event(ABCEvent):
             raise e
 
         finally:
+            print(f"run event {self.__class__.__name__}", self._before_listeners, self._after_listeners)
 
             # Emit the event
-
             if asyncio.get_event_loop().is_running():
 
                 asyncio.ensure_future(
@@ -141,7 +146,7 @@ class Event(ABCEvent):
                     )
                 )
 
-            self.event_args = []
+            self.event_args = ()
 
             self.events_kwargs = {}
 

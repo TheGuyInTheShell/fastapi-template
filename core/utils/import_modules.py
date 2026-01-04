@@ -72,7 +72,6 @@ def load_subscribers(base_path: str = "app/webhooks/out"):
         if "subscriber.py" in files:
             # Use relative path from current working directory to calculate module path
             rel_path = os.path.relpath(root, os.getcwd())
-            print(f"DEBUG: root={root}, cwd={os.getcwd()}, rel_path={rel_path}")
             normalized_root = rel_path.replace("\\", "/").replace("/", ".")
             module_path = f"{normalized_root}.subscriber"
             try:
