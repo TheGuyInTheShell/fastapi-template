@@ -22,8 +22,13 @@ Una plantilla completa y lista para producción para construir aplicaciones web 
 
 ### **Comunicación en Tiempo Real**
 - **Socket.IO**: Comunicación bidireccional y basada en eventos entre cliente y servidor
-- **Eventos Asíncronos**: Sistema de eventos personalizado para comunicación entre módulos
+- **Eventos Asíncronos**: Sistema de eventos `ChannelEvent` con soporte de inyección de dependencias (`DependsEvent`) y resultados.
 - **WebSocket Support**: Soporte completo para conexiones WebSocket
+- **Webhooks System**: Sistema robusto de Webhooks entrantes y salientes con registro automático.
+
+### **Extensiones e IA** (ejemplo de uso)
+- **AI Agents**: Integración con LangChain y LangGraph para lógica compleja "ejemplo".
+- **Arquitectura de Agentes**: Soporte para grafos multi-agente, herramientas personalizadas y memoria "ejemplo".
 
 ### **Panel Administrativo**
 - **Interfaz de Administración**: Panel web para gestionar recursos de la API
@@ -52,10 +57,8 @@ Una plantilla completa y lista para producción para construir aplicaciones web 
 fastapi_template/
 ├── core/                      # Núcleo de la aplicación
 │   ├── database/             # Configuración de base de datos
-│   │   ├── async_connection.py   # Conexión asíncrona a PostgreSQL
-│   │   ├── sync_connection.py    # Conexión síncrona a PostgreSQL
-│   │   ├── base.py               # Modelos base de SQLAlchemy
-│   │   └── utils/                # Utilidades de base de datos (paginación, etc.)
+│   │   ├── drivers/          # Drivers de base de datos
+│   │   │   └─── postgresql/   # Driver de PostgreSQL
 │   ├── py.typed              # Marker de tipado PEP 561
 │   └── utils/                # Utilidades de base de datos (paginación, etc.)
 │   ├── middlewares/          # Middlewares personalizados
@@ -208,6 +211,12 @@ docker-compose up --build
 ```
 
 La aplicación estará disponible en `http://localhost:8880`
+
+Para habilitar los agentes de IA, asegúrate de configurar las claves de API necesarias en `.env`:
+```env
+OPENAI_API_KEY=sk-...
+TAVILY_API_KEY=tvly-...
+```
 
 ## 🚀 Uso
 
@@ -390,7 +399,34 @@ Ejecución de tareas en segundo plano con APScheduler.
 - Tareas cron
 - Tareas por intervalo
 - Tareas únicas
+- Tareas únicas
 - Gestión del ciclo de vida
+
+### 10. **Sistema de Webhooks** (`app/webhooks/`)
+
+Sistema centralizado para manejar webhooks de entrada y salida.
+
+**Estructura:**
+- `in/`: Controladores para recibir webhooks de servicios externos.
+- `out/`: Suscriptores que escuchan eventos internos y envían datos a servicios externos.
+
+**Características:**
+- **Auto-descubrimiento**: Los controladores y suscriptores se cargan automáticamente.
+- **ChannelEvent Integrado**: Desacoplamiento total mediante eventos.
+- **Validación**: Uso de Pydantic para validar payloads entrantes.
+
+### 11. **Extensiones e IA** (`app/ext/`)
+
+Carpeta dedicada a lógica de negocio compleja y agentes de IA.
+
+**Estructura (`app/ext/ia/`):**
+- `agents/`: Definición de agentes (Researcher, Writer, etc.)
+- `graphs/`: Flujos de trabajo con LangGraph (StateGraph, MultiAgentGraph)
+- `tools/`: Herramientas personalizadas para los agentes
+- `chains/`: Cadenas de procesamiento LangChain
+
+**Ejemplo de uso (LangGraph):**
+El sistema incluye un ejemplo de grafo multi-agente donde un investigador y un escritor colaboran para generar contenido.
 
 ## 🔧 Arquitectura y Patrones
 
@@ -438,6 +474,15 @@ async def endpoint(db: AsyncSession = Depends(get_async_db)):
 from core.database.sync_connection import engineSync
 BaseSync.metadata.create_all(engineSync)
 ```
+
+### Sistema de Eventos (ChannelEvent)
+
+El núcleo de la comunicación asíncrona es `ChannelEvent`, que permite:
+
+1. **Suscrube/Listen**: Decoradores `@channel.subscribe_to` y `@channel.listen_to`.
+2. **Inyección de Dependencias**: Uso de `result = channel.DependsEvent(event_result)` para recibir resultados de eventos previos.
+3. **Inyección Inteligente**: Los suscriptores reciben automáticamente el argumento `result` si lo declaran en su firma.
+4. **Resiliencia**: Inicialización robusta de eventos y manejo de errores.
 
 ## 🔐 Seguridad
 
