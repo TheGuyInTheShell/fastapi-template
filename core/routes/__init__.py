@@ -1,4 +1,4 @@
-from core.utils.import_modules import import_modules
+from core.utils.import_modules import import_modules, import_webhooks, load_subscribers
 
 from fastapi import APIRouter, Depends
 from starlette.responses import Response
@@ -61,3 +61,9 @@ async def metrics(
 
 
 routes = import_modules(api_router)
+
+# Automatic registration of inbound webhooks (no auth required)
+import_webhooks(api_router, base_path="app/webhooks/in", prefix="/webhook")
+
+# Ensure outbound subscribers are loaded
+load_subscribers()

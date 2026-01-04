@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 class ChannelEvent(ABCChannelEvent):
 
-    events: Dict[str, Event] = dict()
+    events: Dict[str, Event] = {}
 
     instances = None
 
@@ -162,7 +162,9 @@ class ChannelEvent(ABCChannelEvent):
 
         if event is None:
 
-            raise ValueError(f"Event {event_key} not found")
+            event = Event()
+
+            self.events[event_key] = event
 
         try:
 

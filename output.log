@@ -1,0 +1,7 @@
+INFO:     Will watch for changes in these directories: ['C:\\Users\\elies\\OneDrive\\Documents\\Projects\\Python\\fastapi_template']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [17660] using WatchFiles
+Server initialized for asgi.
+INFO:     Started server process [24484]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
