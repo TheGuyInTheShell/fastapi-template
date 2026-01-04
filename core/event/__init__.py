@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 
 from asyncio import iscoroutinefunction
 from typing import (
@@ -11,6 +12,8 @@ from typing import (
     Union,
     Awaitable,
     TYPE_CHECKING,
+    Optional,
+    Iterator
 )
 from .base.event import Event
 from .utils.type_check import type_check
@@ -19,6 +22,19 @@ from .types.channel_event import ABCChannelEvent, ABCEvent
 
 if TYPE_CHECKING:
     from .base.event import TAction
+
+
+class EventDependency:
+    def __init__(self, dependency: Callable):
+        self.dependency = dependency
+
+# interator injection of result
+def event_result(event: "ABCEvent"):
+    try:
+        return event.result
+    except NameError:
+        return None
+    
 
 
 class ChannelEvent(ABCChannelEvent):
@@ -36,16 +52,40 @@ class ChannelEvent(ABCChannelEvent):
     def __init__(self):
         # Override to prevent ABCChannelEvent.__init__ from resetting self.events
         pass
+        
+
 
     async def _call_listeners(
-        self, listeners: Set[Callable], args: Tuple, kwargs: Dict
+        self, listeners: Set[Callable], args: Tuple, kwargs: Dict, event: "ABCEvent"
     ):
         for listener in listeners:
+            sig = inspect.signature(listener)
+            target_kwargs = {}
+
+            # Check for generic **kwargs
+            has_var_kwargs = any(
+                p.kind == p.VAR_KEYWORD for p in sig.parameters.values()
+            )
+
+            # Handle regular params and DependsEvent
+            for name, param in sig.parameters.items():
+                if isinstance(param.default, EventDependency):
+                     # dependency logic
+                     dep_res = param.default.dependency(event)
+                     target_kwargs[name] = dep_res
+                elif name in kwargs:
+                    target_kwargs[name] = kwargs[name]
+                
+            if has_var_kwargs:
+                # Add remaining kwargs if **kwargs exists
+                for k, v in kwargs.items():
+                    if k not in target_kwargs:
+                        target_kwargs[k] = v
 
             (
-                await listener(*args, **kwargs)
+                await listener(*args, **target_kwargs)
                 if iscoroutinefunction(listener)
-                else listener(*args, **kwargs)
+                else listener(*args, **target_kwargs)
             )
 
     async def _iterator(self, event: "ABCEvent", func: Callable, *args, **kwargs):
@@ -53,7 +93,7 @@ class ChannelEvent(ABCChannelEvent):
         result = None
 
         await self._call_listeners(
-            listeners=event._before_listeners, args=args, kwargs=kwargs
+            listeners=event._before_listeners, args=args, kwargs=kwargs, event=event
         )
 
         result = (
@@ -62,11 +102,18 @@ class ChannelEvent(ABCChannelEvent):
             else func(*args, **kwargs)
         )
 
+        event.result = result
 
         await self._call_listeners(
-            listeners=event._after_listeners, args=args, kwargs=kwargs
+            listeners=event._after_listeners, args=args, kwargs=kwargs, event=event
         )
+
+        event.result = None
+
         return result
+
+    def DependsEvent(self, dependency: Callable):
+        return EventDependency(dependency)
 
     def with_args_types(self, event: "ABCEvent"):
 
@@ -74,7 +121,7 @@ class ChannelEvent(ABCChannelEvent):
 
             def decorator(
                 func: Union[Callable[..., Any], Callable[..., Awaitable]],
-            ) -> any:
+            ) -> Any:
 
                 def wrapper(*args, **kwargs):
 
@@ -120,7 +167,7 @@ class ChannelEvent(ABCChannelEvent):
 
         def decorator(
             handler: Union[Callable[..., Any], Callable[..., Awaitable]],
-        ) -> any:
+        ) -> Any:
 
             event: "ABCEvent" | None = self.events.get(event_key)
 
@@ -133,8 +180,6 @@ class ChannelEvent(ABCChannelEvent):
                 self.events[event_key] = event
 
             event.add_listener(action, handler)
-
-            print(f"add listener {event_key}", event._before_listeners, event._after_listeners)
 
             def wrapper(*args, **kwargs):
 

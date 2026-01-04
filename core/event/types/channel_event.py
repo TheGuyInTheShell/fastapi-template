@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Set, Union, Awaitable, Optional
+from typing import Any, Callable, Dict, Set, Union, Awaitable, Optional, Iterator
 from .event import ABCEvent, TAction
 
 CallsType = Callable[[tuple[tuple, dict, Any]], Any]
 
 
 class ABCChannelEvent(ABC):
+
+    _triggered_event: Iterator[ABCEvent]
 
     def __init__(self):
 

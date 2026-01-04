@@ -19,7 +19,11 @@ TAction = Literal["before", "after"]
 
 class ABCEvent(ABC):
 
+    result: Any
+
     def __init__(self):
+
+        self.result = None
 
         self._before_listeners: Set[Callable] = set()
 

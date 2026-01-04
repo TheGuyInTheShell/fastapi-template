@@ -31,6 +31,8 @@ class Event(ABCEvent):
 
     channelRef: "ABCChannelEvent"
 
+    result: Any
+
     def __init__(self):
 
         self._before_listeners: Set[Callable] = set()
@@ -40,8 +42,6 @@ class Event(ABCEvent):
     def add_listener(self, action: TAction, handler: Callable):
 
         self.add_action(action, handler)
-
-        print(f"add listener {action}", self._before_listeners, self._after_listeners)
 
         return self
 
@@ -122,7 +122,6 @@ class Event(ABCEvent):
             raise e
 
         finally:
-            print(f"run event {self.__class__.__name__}", self._before_listeners, self._after_listeners)
 
             # Emit the event
             if asyncio.get_event_loop().is_running():
@@ -130,7 +129,7 @@ class Event(ABCEvent):
                 asyncio.ensure_future(
                     self.channelRef._iterator(
                         self,
-                        lambda *args, **kwargs: None,
+                        lambda *args, **kwargs: "void",
                         *self.event_args,
                         **self.events_kwargs
                     )
@@ -140,7 +139,7 @@ class Event(ABCEvent):
                 asyncio.run(
                     self.channelRef._iterator(
                         self,
-                        lambda *args, **kwargs: None,
+                        lambda *args, **kwargs: "void",
                         *self.event_args,
                         **self.events_kwargs
                     )
