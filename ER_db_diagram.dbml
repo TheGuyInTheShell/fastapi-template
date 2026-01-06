@@ -1,108 +1,89 @@
+
 Table users {
-  id int [pk]
-  _id varchar [pk]
-  username varchar
-  password varchar
-  role varchar
-  email email
-  create_at date
-  delete_at date
-  update_at date
+  uid varchar [pk, unique, note: "UUID"]
+  id int [pk, increment]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted bool
+
+  username varchar [unique, not null]
+  role_ref varchar [ref: > roles.uid, not null]
+  password varchar [not null]
+  email varchar [unique]
+  full_name varchar [not null]
+  otp_secret varchar
+  otp_enabled bool
 }
 
-Enum protocols {
-  "rstp"
-  "http"
+Table roles {
+  uid varchar [pk, unique, note: "UUID"]
+  id int [pk, increment]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted bool
+
+  name varchar [not null]
+  description varchar [not null]
+  level int [unique, not null]
+  permissions "varchar[]" [not null]
+  disabled bool [default: false]
 }
 
-Enum Dir {
-  "IN"
-  "OUT"
+Table permissions {
+  uid varchar [pk, unique, note: "UUID"]
+  id int [pk, increment]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted bool
+
+  name varchar [unique, not null]
+  action varchar [not null]
+  description varchar [not null]
+  type varchar [not null]
 }
 
-Table cameras {
-  id int [pk]
-  _id varchar [pk]
-  ip varchar [unique]
-  protocol protocols
-  serial varchar [unique]
-  brand varchar
-  content_directory varchar
-  user varchar
-  password varchar
-  port varchar
-  direction Dir
-  disable bool
-  create_at date
-  delete_at date
-  update_at date
+Table menu {
+  uid varchar [pk, unique, note: "UUID"]
+  id int [pk, increment]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted bool
+
+  name varchar [not null]
+  type_menu varchar [not null]
+  file_route varchar [not null]
+  active bool [not null]
 }
 
+Table menu_role {
+  uid varchar [pk, unique, note: "UUID"]
+  id int [pk, increment]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted bool
 
-
-Table register_vehicles_in_out {
-  id int [pk]
-  _id varchar [pk]
-  plate varchar [fts]
-  moment timestamp
-  create_at date [pk] // partition by day
-  direction Dir
-  camera int
+  name varchar [not null]
+  description varchar [not null]
+  level int [unique, not null]
+  menus "varchar[]" [not null]
+  disabled bool [default: false]
 }
 
+Table api_tokens {
+  uid varchar [pk, unique, note: "UUID"]
+  id int [pk, increment]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  is_deleted bool
 
-Table clients {
-  id int [pk]
-  _id varchar [pk]
-  first_names varchar [fts]
-  last_names varchar [fts]
-  phone varchar
-  dni varchar [unique]
-  create_at date
-  delete_at date
-  update_at date
-}
-
-Table clients_cars {
-  _id varchar [pk] // same _id of clients
-  vehicle_ref varchar [ref: - vehicles._id]
-}
-Table cars_clients {
-  _id varchar [pk] // same _id of cars
-  client_ref varchar [ref: - clients._id]
-}
-
-Table vehicles {
-  id int [pk]
-  _id varchar [pk]
-  plate varchar [unique]
-  color varchar
-  model varchar
-  brand varchar
-  create_at date
-  delete_at date
-  update_at date
-}
-
-Table subscriptions {
-  id int [pk]
-  _id varchar [pk] // same _id of client
-  promotion varchar [ref: - promotions._id]
-  end_at date
-  create_at date
-  delete_at date
-  update_at date
-}
-
-Table promotions {
-  id int [pk]
-  _id varchar [pk]
-  name varchar
-  duration_days int
-  discount_percent int // 1 to 99
-  valid_before date
-  valid_after date
-  create_at date
-  delete_at date
-  update_at date
+  name varchar [not null]
+  description varchar [not null]
+  role_ref varchar [ref: > roles.uid, not null]
+  expiration date
 }
