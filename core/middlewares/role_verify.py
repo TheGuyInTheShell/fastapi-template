@@ -26,12 +26,9 @@ import asyncio
 from .jwt_verify import JWT_VERIFY
 
 
-import os
-import dotenv
+from core.config.globals import settings
 
-dotenv.load_dotenv()
-
-mode = os.getenv("MODE")
+mode = settings.MODE
 
 
 def ROLE_VERIFY(omit_routes: list = []) -> Callable:
@@ -76,6 +73,13 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                         response.headers["new-access-token"] = new_access_token
 
             if not payload:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User unauthorized",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            if not payload.role:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User unauthorized",

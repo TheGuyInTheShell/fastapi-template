@@ -1,14 +1,14 @@
-import os
+from core.config.globals import settings
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-DEBUG = True if os.getenv("DEBUG") == "DEVELOPMENT" else False
+DB_USER = settings.DB_USER
+DB_PASSWORD = settings.DB_PASSWORD
+DB_HOST = settings.DB_HOST
+DB_PORT = settings.DB_PORT
+DB_NAME = settings.DB_NAME
+DEBUG = settings.MODE == "DEVELOPMENT"
 DB_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Create Database Engine

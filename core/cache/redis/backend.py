@@ -1,6 +1,6 @@
 import redis.asyncio as redis
 import redis as redis_sync
-from typing import Any
+from typing import Any, Optional
 from ..base import BaseCacheBackend
 
 
@@ -8,8 +8,9 @@ class RedisCacheBackend(BaseCacheBackend):
     def __init__(self, host: str, port: int):
         self._host = host
         self._port = port
-        self._async_client = None
-        self._sync_client = None
+        self._port = port
+        self._async_client: Optional[redis.Redis] = None
+        self._sync_client: Optional[redis_sync.Redis] = None
         self._connect()
 
     def _connect(self):
@@ -26,19 +27,31 @@ class RedisCacheBackend(BaseCacheBackend):
         )
 
     async def get(self, key: str) -> Any:
+        if self._async_client is None:
+            raise RuntimeError("Async Redis client is not initialized")
         return await self._async_client.get(key)
 
     async def set(self, key: str, value: Any, ttl: int = 60) -> None:
+        if self._async_client is None:
+            raise RuntimeError("Async Redis client is not initialized")
         await self._async_client.set(key, value, ex=ttl)
 
     async def delete(self, key: str) -> None:
+        if self._async_client is None:
+            raise RuntimeError("Async Redis client is not initialized")
         await self._async_client.delete(key)
 
     def sync_get(self, key: str) -> Any:
+        if self._sync_client is None:
+            raise RuntimeError("Sync Redis client is not initialized")
         return self._sync_client.get(key)
 
     def sync_set(self, key: str, value: Any, ttl: int = 60) -> None:
+        if self._sync_client is None:
+            raise RuntimeError("Sync Redis client is not initialized")
         self._sync_client.set(key, value, ex=ttl)
 
     def sync_delete(self, key: str) -> None:
+        if self._sync_client is None:
+            raise RuntimeError("Sync Redis client is not initialized")
         self._sync_client.delete(key)

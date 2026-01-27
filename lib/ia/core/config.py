@@ -1,12 +1,9 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from core.config.globals import settings
 
 class Config:
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-...")
-    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "sk-ant-...")
-    MODEL_NAME = os.getenv("IA_MODEL_NAME", "gpt-4-turbo-preview")
+    OPENAI_API_KEY = settings.OPENAI_API_KEY
+    ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
+    MODEL_NAME = settings.IA_MODEL_NAME
     TEMPERATURE = 0.7
 
 config = Config()

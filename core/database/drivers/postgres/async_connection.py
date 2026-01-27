@@ -1,14 +1,14 @@
-import os
+from core.config.globals import settings
 import time
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-DEBUG = True if os.getenv("MODE") == "DEVELOPMENT" else False
+DB_USER = settings.DB_USER
+DB_PASSWORD = settings.DB_PASSWORD
+DB_HOST = settings.DB_HOST
+DB_PORT = settings.DB_PORT
+DB_NAME = settings.DB_NAME
+DEBUG = settings.MODE == "DEVELOPMENT"
 
 # SQLALCHEMY
 engineAsync = None

@@ -20,11 +20,9 @@ from app.modules.permissions.const import admin_type
 from core.database import SessionAsync
 
 import asyncio
+from core.config.globals import settings
 import os
-import dotenv
-
-dotenv.load_dotenv()
-mode = os.getenv("MODE")
+import asyncio
 from typing import List, Dict, Any
 
 
@@ -57,7 +55,7 @@ def init_admin(templates: Jinja2Templates, app: FastAPI) -> List[Dict[str, Any]]
                 [Depends(ROLE_VERIFY_COOKIE)] if module_name != "sign-in" else []
             )
 
-            if mode == "DEVELOPMENT":
+            if settings.MODE == "DEVELOPMENT":
                 dependencies = []
 
             app.include_router(

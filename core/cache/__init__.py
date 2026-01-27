@@ -1,4 +1,4 @@
-import os
+from core.config.globals import settings
 import json
 import inspect
 from functools import wraps
@@ -28,8 +28,8 @@ class Cache:
         self.backend: BaseCacheBackend = None
 
         # Configuration
-        redis_host = os.getenv("REDIS_HOST", "localhost")
-        redis_port = int(os.getenv("REDIS_PORT", 6379))
+        redis_host = settings.REDIS_HOST
+        redis_port = settings.REDIS_PORT
 
         # Try to initialize Redis
         try:

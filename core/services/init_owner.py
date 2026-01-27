@@ -1,7 +1,4 @@
-import os
-from typing import List
-
-from dotenv import load_dotenv
+from core.config.globals import settings
 from passlib.context import CryptContext  # type: ignore
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -10,13 +7,13 @@ from app.modules.permissions.models import Permission
 from app.modules.roles.models import Role
 from app.modules.users.models import User
 
-load_dotenv()
+
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-OWNER_USER = os.environ.get("OWNER_USER", "admin")
-OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "admin@admin.com")
-OWNER_PASS = os.environ.get("OWNER_PASS", "admin")
+OWNER_USER = settings.OWNER_USER
+OWNER_EMAIL = settings.OWNER_EMAIL
+OWNER_PASS = settings.OWNER_PASS
 
 
 async def initialize_owner_role(db: AsyncSession) -> Role:

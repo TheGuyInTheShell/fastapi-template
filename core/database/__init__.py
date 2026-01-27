@@ -1,8 +1,5 @@
 from sqlalchemy import MetaData, func, literal, text
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from core.config.globals import settings
 
 
 def to_tsvector_ix(*columns):
@@ -12,7 +9,7 @@ def to_tsvector_ix(*columns):
     return func.to_tsvector(literal("english"), text(s))
 
 
-driver = os.getenv("DB_DRIVER")
+driver = settings.DB_DRIVER
 
 if driver == "postgres":
 

@@ -1,10 +1,10 @@
 from typing import Dict, Tuple
-import os
+from core.config.globals import settings
 from socketio import AsyncServer
 
 from app.modules.auth.services import decode_token
 
-DEBUG = True if os.getenv("MODE") == "DEVELOPMENT" else False
+DEBUG = settings.MODE == "DEVELOPMENT"
 
 
 async def JWT_VERIFY_SOCKET(jwt: str):

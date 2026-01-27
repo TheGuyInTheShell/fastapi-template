@@ -32,7 +32,7 @@ async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
 @router.get("/", response_model=RSRoleList, status_code=200, tags=[tag])
 @cache.cache_endpoint(ttl=60, namespace="roles")
 async def get_Roles(
-    pag: Optional[int] = 1,
+    pag: int = 1,
     ord: Literal["asc", "desc"] = "asc",
     status: Literal["deleted", "exists", "all"] = "exists",
     db: AsyncSession = Depends(get_async_db),

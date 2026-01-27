@@ -1,9 +1,6 @@
-import os
+from core.config.globals import settings
 import time
 from typing import Union
-
-import jwt
-from dotenv import load_dotenv
 from fastapi import HTTPException
 from passlib.context import CryptContext
 from sqlalchemy import Result, select
@@ -21,11 +18,11 @@ from bcrypt import _bcrypt # type: ignore
 if not hasattr(bcrypt, "__about__"):
    setattr(bcrypt, "__about__", type("About", (object,), {"__version__": _bcrypt.__version_ex__}))
 
-load_dotenv()
+import jwt
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY_JWT = os.environ.get("JWT_KEY", default="").encode() # type: ignore
-USED_ALGORITHM = os.environ.get("JWT_ALG", default="HS256")
+SECRET_KEY_JWT = settings.JWT_KEY.encode()
+USED_ALGORITHM = settings.JWT_ALG
 
 
 async def get_user(db: AsyncSession, username: str) -> User | None:

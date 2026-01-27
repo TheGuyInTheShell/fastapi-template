@@ -1,7 +1,4 @@
-import os
-from typing import List
-
-from dotenv import load_dotenv
+from core.config.globals import settings
 from passlib.context import CryptContext # type: ignore
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -10,13 +7,13 @@ from app.modules.permissions.models import Permission
 from app.modules.roles.models import Role
 from app.modules.users.models import User
 
-load_dotenv()
+
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-OBSERVER_USER = os.environ.get("OBSERVER_USER", "observer")
-OBSERVER_EMAIL = os.environ.get("OBSERVER_EMAIL", "observer@admin.com")
-OBSERVER_PASS = os.environ.get("OBSERVER_PASS", "observer")
+OBSERVER_USER = settings.OBSERVER_USER
+OBSERVER_EMAIL = settings.OBSERVER_EMAIL
+OBSERVER_PASS = settings.OBSERVER_PASS
 
 
 async def initialize_observer_role(db: AsyncSession) -> Role:
