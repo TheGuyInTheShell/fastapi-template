@@ -1,16 +1,17 @@
 from core.plugins.types.plugin import Plugin
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from lib.scrape.navegator import Navigator
-from .settings import settings
+from .settings import settings, Settings
 from asyncio.exceptions import CancelledError
 import lib.scrape.base as scrape
 
 class ScraperPlugin(Plugin):
 
-    async def initialize(self, app: FastAPI):
+    async def initialize(self, app: FastAPI, config: Settings = settings):
         try:
             print("[ScraperPlugin] Initializing...")
-            Navigator(settings.email_linkedin, settings.password_linkedin)
+            Navigator(config.email_linkedin, config.password_linkedin)
+
         except Exception as e:
             print(f"[ScraperPlugin] Error initializing: {e}")
             Navigator.terminate_instance()
