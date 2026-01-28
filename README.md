@@ -101,6 +101,64 @@ fastapi_template/
 └── ER_db_diagram.dbml        # Diagrama de base de datos
 ```
 
+## 🛠️ CLI - Generador de Módulos
+
+Este proyecto incluye una **herramienta CLI** para generar módulos automáticamente con toda la estructura necesaria.
+
+### Uso del Generador
+
+**Generar un módulo simple:**
+```bash
+python cli.py generate:module products
+```
+
+Esto crea:
+```
+app/modules/products/
+├── __init__.py
+├── controller.py    # Router FastAPI con endpoints CRUD
+├── schemas.py       # Schemas Pydantic (Request/Response)
+├── models.py        # Modelo SQLAlchemy
+└── services.py      # Lógica de negocio
+```
+
+**Generar módulos anidados:**
+```bash
+python cli.py generate:module store.inventory
+```
+
+Esto crea:
+```
+app/modules/store/
+├── __init__.py
+└── inventory/
+    ├── __init__.py
+    ├── controller.py
+    ├── schemas.py
+    ├── models.py
+    └── services.py
+```
+
+### Archivos Generados
+
+Cada módulo generado incluye:
+
+- **controller.py**: Router completo con endpoints CRUD (GET, POST, PUT, DELETE)
+- **schemas.py**: Schemas de Request/Response con paginación
+- **models.py**: Modelo SQLAlchemy con campos básicos
+- **services.py**: Funciones de servicio base
+
+### Personalización Post-Generación
+
+Después de generar un módulo:
+
+1. **Editar `models.py`**: Añade los campos específicos de tu modelo
+2. **Actualizar `schemas.py`**: Añade validaciones y campos necesarios
+3. **Modificar `controller.py`**: Personaliza los endpoints según tus necesidades
+4. **Implementar `services.py`**: Añade la lógica de negocio específica
+5. **Registrar el router**: Importa y registra en `main.py` o usa auto-registro
+6. **Ejecutar migraciones**: Crea y aplica migraciones de Alembic si modificaste modelos
+
 ## 🛠️ Instalación
 
 ### Prerrequisitos
@@ -669,13 +727,10 @@ Este proyecto está licenciado bajo la Licencia MIT. Ver el archivo `LICENSE` pa
 
 ## 🎯 Próximas Características
 
-- [ ] Sistema de notificaciones por email
-- [ ] Autenticación con OAuth2 (Google, GitHub)
+- [ ] Conexion SMTP
 - [ ] Rate limiting por usuario
-- [ ] Sistema de auditoría completo
+- [ ] Tests completos
 - [ ] Soporte para múltiples idiomas (i18n)
-- [ ] Tests automatizados completos
-- [ ] CI/CD con GitHub Actions
 
 ---
 
