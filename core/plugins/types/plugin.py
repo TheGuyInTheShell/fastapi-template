@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 
 import abc
-import typing, Optional
+import typing
+from typing import Optional
 
 import fastapi
 import pydantic_settings

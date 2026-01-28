@@ -148,4 +148,5 @@ try:
 
 
 except Exception as e:
+    print(e)
     os._exit(0)
