@@ -4,34 +4,44 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
+from core import cache
 
 from .models import Permission
-from .schemas import RQPermission, RSPermission, RSPermissionList
-from core.cache import Cache
+from .schemas import (
+    RQPermission, 
+    RQCreatePermission,
+    RQBulkPermissions,
+    RSPermission, 
+    RSPermissionList,
+    RSBulkPermissionsResponse
+)
+from .services import create_permission, create_bulk_permissions_with_roles
 
 # prefix /permissions
 router = APIRouter()
-
-cache = Cache()
 
 tag = "permissions"
 
 
 @router.get("/id/{id}", response_model=RSPermission, status_code=200, tags=[tag])
-@cache.cache_endpoint(ttl=60, namespace="permissions")
 async def get_Permission(
     id: str, db: AsyncSession = Depends(get_async_db)
 ) -> RSPermission:
     try:
-        result = await Permission.find_one(db, id)
-        return result
+        result: Permission = await Permission.find_one(db, id)
+        return RSPermission(
+            uid=result.uid,
+            action=result.action,
+            description=result.description,
+            name=result.name,
+            type=result.type,
+        )
     except Exception as e:
         print(e)
         raise e
 
 
 @router.get("/", response_model=RSPermissionList, status_code=200, tags=[tag])
-@cache.cache_endpoint(ttl=60, namespace="permissions")
 async def get_Permissions(
     pag: Optional[int] = 1,
     ord: Literal["asc", "desc"] = "asc",
@@ -39,8 +49,8 @@ async def get_Permissions(
     db: AsyncSession = Depends(get_async_db),
 ) -> RSPermissionList:
     try:
-        result = await Permission.find_some(db, pag, ord, status)
-        result = map(
+        result = await Permission.find_some(db,  pag or 1, ord, status)
+        result2 = list(map(
             lambda x: RSPermission(
                 uid=x.uid,
                 action=x.action,
@@ -49,9 +59,9 @@ async def get_Permissions(
                 type=x.type,
             ),
             result,
-        )
+        ))
         return RSPermissionList(
-            data=list(result),
+            data=result2,
             total=0,
             page=0,
             page_size=0,
@@ -74,7 +84,7 @@ async def get_all_Permissions(
 ) -> RSPermissionList:
     try:
         result = await Permission.find_all(db, status)
-        result = map(
+        result2 = list(map(
             lambda x: RSPermission(
                 uid=x.uid,
                 action=x.action,
@@ -83,11 +93,17 @@ async def get_all_Permissions(
                 type=x.type,
             ),
             result,
-        )
-        result = list(result)
+        ))
         return RSPermissionList(
-            data=result,
+            data=result2,
             total=len(result),
+            page=0,
+            page_size=0,
+            total_pages=0,
+            has_next=False,
+            has_prev=False,
+            next_page=0,
+            prev_page=0,
         )
     except Exception as e:
         print(e)
@@ -125,3 +141,60 @@ async def update_Permission(
     except Exception as e:
         print(e)
         raise e
+
+
+@router.post("/bulk", response_model=RSBulkPermissionsResponse, status_code=201, tags=[tag])
+async def create_bulk_permissions(
+    bulk_data: RQBulkPermissions, 
+    db: AsyncSession = Depends(get_async_db)
+) -> RSBulkPermissionsResponse:
+    """
+    Crea múltiples permisos en bulk y los asigna a sus roles correspondientes.
+    
+    Args:
+        bulk_data: Datos de los permisos a crear con sus roles asociados
+        db: Sesión de base de datos
+        
+    Returns:
+        RSBulkPermissionsResponse: Resultado de la creación en bulk
+        
+    Example:
+        ```json
+        {
+            "permissions": [
+                {
+                    "name": "create_user",
+                    "action": "POST",
+                    "description": "/api/users",
+                    "type": "api",
+                    "role_id": "uuid-del-rol"
+                },
+                {
+                    "name": "delete_user",
+                    "action": "DELETE",
+                    "description": "/api/users/{id}",
+                    "type": "api",
+                    "role_id": "uuid-del-rol"
+                }
+            ]
+        }
+        ```
+    """
+    try:
+        results, success_count, error_count = await create_bulk_permissions_with_roles(
+            db=db,
+            permissions_data=bulk_data.permissions
+        )
+        
+        return RSBulkPermissionsResponse(
+            created=results,
+            total=len(bulk_data.permissions),
+            success_count=success_count,
+            error_count=error_count
+        )
+    except Exception as e:
+        print(f"Error in create_bulk_permissions endpoint: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al crear permisos en bulk: {str(e)}"
+        )

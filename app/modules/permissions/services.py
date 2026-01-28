@@ -5,7 +5,126 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .models import Permission
+from .schemas import RQCreatePermission, RQBulkPermission, RSPermission, RSBulkPermissionResult
+from app.modules.roles.models import Role
 from sqlalchemy import select
+
+
+async def create_permission(
+    db: AsyncSession,
+    name: str,
+    action: str,
+    description: str,
+    type: str
+) -> Permission:
+    """
+    Crea un solo permiso en la base de datos.
+    
+    Args:
+        db: Sesión de base de datos
+        name: Nombre del permiso
+        action: Acción del permiso (GET, POST, PUT, DELETE, etc.)
+        description: Descripción del permiso
+        type: Tipo del permiso (api, admin, etc.)
+        
+    Returns:
+        Permission: El permiso creado
+        
+    Raises:
+        Exception: Si hay un error al crear el permiso
+    """
+    permission = Permission(
+        name=name,
+        action=action,
+        description=description,
+        type=type,
+    )
+    await permission.save(db)
+    return permission
+
+
+async def create_bulk_permissions_with_roles(
+    db: AsyncSession,
+    permissions_data: List[RQBulkPermission]
+) -> tuple[List[RSBulkPermissionResult], int, int]:
+    """
+    Crea múltiples permisos y los asigna a sus roles correspondientes.
+    
+    Args:
+        db: Sesión de base de datos
+        permissions_data: Lista de permisos a crear con sus roles asociados
+        
+    Returns:
+        tuple: (resultados, total_exitosos, total_errores)
+            - resultados: Lista de RSBulkPermissionResult con el resultado de cada creación
+            - total_exitosos: Número de permisos creados exitosamente
+            - total_errores: Número de errores durante la creación
+    """
+    results: List[RSBulkPermissionResult] = []
+    success_count = 0
+    error_count = 0
+    
+    for perm_data in permissions_data:
+        try:
+            # Verificar si el permiso ya existe
+            existing_query = await db.execute(
+                select(Permission).where(Permission.name == perm_data.name)
+            )
+            existing_permission = existing_query.scalar_one_or_none()
+            
+            if existing_permission:
+                # Si ya existe, usamos el existente
+                permission = existing_permission
+            else:
+                # Crear el nuevo permiso
+                permission = await create_permission(
+                    db=db,
+                    name=perm_data.name,
+                    action=perm_data.action,
+                    description=perm_data.description,
+                    type=perm_data.type
+                )
+            
+            # Verificar que el rol existe
+            role = await Role.find_one(db, perm_data.role_id)
+            
+            # Asignar el permiso al rol si no está ya asignado
+            if permission.uid not in role.permissions:
+                updated_permissions = list(role.permissions) + [permission.uid]
+                await role.update(db, perm_data.role_id, {"permissions": updated_permissions})
+            
+            # Agregar resultado exitoso
+            results.append(RSBulkPermissionResult(
+                permission=RSPermission(
+                    uid=permission.uid,
+                    type=permission.type,
+                    name=permission.name,
+                    action=permission.action,
+                    description=permission.description,
+                ),
+                role_id=perm_data.role_id,
+                success=True,
+                error=None
+            ))
+            success_count += 1
+            
+        except Exception as e:
+            # Agregar resultado con error
+            results.append(RSBulkPermissionResult(
+                permission=RSPermission(
+                    uid="",
+                    type=perm_data.type,
+                    name=perm_data.name,
+                    action=perm_data.action,
+                    description=perm_data.description,
+                ),
+                role_id=perm_data.role_id,
+                success=False,
+                error=str(e)
+            ))
+            error_count += 1
+    
+    return results, success_count, error_count
 
 
 async def create_permissions_api(
