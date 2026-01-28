@@ -44,3 +44,7 @@ class INUser(RSUser):
 class RQUserLogin(BaseModel):
     username: str
     password: str
+
+class OTPEnableRequest(BaseModel):
+    otp_code: str
+    secret: str

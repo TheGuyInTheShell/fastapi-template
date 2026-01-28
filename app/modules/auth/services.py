@@ -1,10 +1,11 @@
 from core.config.globals import settings
 import time
 from typing import Union
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from passlib.context import CryptContext
 from sqlalchemy import Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from core.database import get_async_db
 
 from app.modules.users.models import User
 from core.services.init_subscriber import initialize_subscriber_role
@@ -14,6 +15,9 @@ from .types import TokenData
 
 import bcrypt
 from bcrypt import _bcrypt # type: ignore
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_schema = OAuth2PasswordBearer("auth/sign-in")
 
 if not hasattr(bcrypt, "__about__"):
    setattr(bcrypt, "__about__", type("About", (object,), {"__version__": _bcrypt.__version_ex__}))
@@ -128,3 +132,14 @@ def decode_token(token: str) -> TokenData | None:
         return TokenData(**decode_cotent)
     except Exception as e:
         return None
+
+# We need a dependency to get current user from token for these protected endpoints
+async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_async_db)):
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    query = await User.find_by_colunm(db, "username", payload.sub)
+    user = query.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user

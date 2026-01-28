@@ -23,7 +23,13 @@ tag = "roles"
 async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
     try:
         result = await Role.find_one(db, id)
-        return result
+        return RSRole(
+            uid=result.uid,
+            description=result.description,
+            name=result.name,
+            level=result.level,
+            permissions=result.permissions,
+        )
     except Exception as e:
         print(e)
         raise e
@@ -38,8 +44,8 @@ async def get_Roles(
     db: AsyncSession = Depends(get_async_db),
 ) -> RSRoleList:
     try:
-        result = await Role.find_some(db, pag, ord, status)
-        result = map(
+        result = await Role.find_some(db, pag or 1, ord, status)
+        mapped_result = map(
             lambda x: RSRole(
                 uid=x.uid,
                 description=x.description,
@@ -50,7 +56,7 @@ async def get_Roles(
             result,
         )
         return RSRoleList(
-            data=list(result),
+            data=list(mapped_result),
             total=0,
             page=0,
             page_size=0,

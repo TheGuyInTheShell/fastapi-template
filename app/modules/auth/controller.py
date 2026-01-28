@@ -8,9 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_db
 from app.modules.users.models import User
-from core.cache import Cache
 
-from .schemas import RQUser, RQUserLogin, RSUser, RSUserTokenData
+from .schemas import RQUser, RQUserLogin, RSUser, RSUserTokenData, OTPEnableRequest
 from .types import TokenData
 from .services import (
     authenticade_user,
@@ -21,6 +20,7 @@ from .services import (
     get_user,
     get_user,
     REFRESH_TOKEN_EXPIRE_MINUTES,
+    get_current_user
 )
 from .otp import generate_otp_secret, verify_otp_code, get_otp_provisioning_uri, generate_qr_code_base64
 from pydantic import BaseModel
@@ -28,14 +28,11 @@ from pydantic import BaseModel
 # prefix /auth
 router = APIRouter()
 
-cache = Cache()
-
 oauth2_schema = OAuth2PasswordBearer("auth/sign-in")
 tag = "auth"
 
 
 @router.get("/", tags=[tag])
-@cache.cache_endpoint(ttl=120, namespace="auth")
 def token(token: str = Depends(oauth2_schema)):
     return token
 
@@ -258,19 +255,6 @@ async def verify_otp(request: OTPVerifyRequest, db: AsyncSession = Depends(get_a
     return response
 
 
-
-
-# We need a dependency to get current user from token for these protected endpoints
-async def get_current_user(token: str = Depends(oauth2_schema), db: AsyncSession = Depends(get_async_db)):
-    payload = decode_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    query = await User.find_by_colunm(db, "username", payload.sub)
-    user = query.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
-
 @router.get("/2fa/setup", tags=[tag])
 async def setup_2fa(current_user=Depends(get_current_user)):
     secret = generate_otp_secret()
@@ -282,9 +266,6 @@ async def setup_2fa(current_user=Depends(get_current_user)):
         "qr_code": qr_b64
     }
 
-class OTPEnableRequest(BaseModel):
-    otp_code: str
-    secret: str
 
 @router.post("/2fa/enable", tags=[tag])
 async def enable_2fa(request: OTPEnableRequest, current_user=Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
