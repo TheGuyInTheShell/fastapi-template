@@ -21,7 +21,7 @@ Examples:
   python cli.py generate:module store.products
   
   # Generate deeply nested module
-  python cli.py generate:module api.v1.products
+  python cli.py generate:module products
         """
     )
     
