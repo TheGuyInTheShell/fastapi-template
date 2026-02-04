@@ -1,22 +1,26 @@
-from typing import List
+from typing import List, Any
 from pydantic import BaseModel
 
 
-class RQMeta(BaseModel):
+class RQMetaUsers(BaseModel):
     """Request schema for creating/updating meta"""
-    name: str
+    key: str
+    value: str
+    ref_user: int | str
 
 
-class RSMeta(BaseModel):
+class RSMetaUsers(BaseModel):
     """Response schema for meta"""
     id: int
     uid: str
-    name: str
+    key: str
+    value: str
+    ref_user: Any 
 
 
-class RSMetaList(BaseModel):
+class RSMetaUsersList(BaseModel):
     """Response schema for list of metas"""
-    data: list[RSMeta] | List = []
+    data: list[RSMetaUsers] | List = []
     total: int = 0
     page: int | None = 0
     page_size: int | None = 0

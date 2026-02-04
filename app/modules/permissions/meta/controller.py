@@ -44,7 +44,7 @@ async def get_meta_permissions(
 ) -> RSMetaPermissionList:
     try:
         result = await MetaPermissions.find_some(db, pag or 1, ord, status)
-        result2 = list(map(
+        mapped_result = list(map(
             lambda x: RSMetaPermission(
                 id=x.id,
                 uid=x.uid,
@@ -54,7 +54,7 @@ async def get_meta_permissions(
             result,
         ))
         return RSMetaPermissionList(
-            data=result2,
+            data=mapped_result,
             total=0,
             page=0,
             page_size=0,
