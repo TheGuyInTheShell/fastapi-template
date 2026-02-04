@@ -45,11 +45,12 @@ tag = "{tag}"
 
 @router.get("/id/{{id}}", response_model=RS{tag.capitalize()}, status_code=200, tags=[tag])
 async def get_{tag}(
-    id: str, db: AsyncSession = Depends(get_async_db)
+    id: str | int, db: AsyncSession = Depends(get_async_db)
 ) -> RS{tag.capitalize()}:
     try:
         result = await {tag.capitalize()}.find_one(db, id)
         return RS{tag.capitalize()}(
+            id=result.id,
             uid=result.uid,
             # Add additional fields here
         )
@@ -67,15 +68,16 @@ async def get_{tag}s(
 ) -> RS{tag.capitalize()}List:
     try:
         result = await {tag.capitalize()}.find_some(db, pag or 1, ord, status)
-        result2 = list(map(
+        mapped_result = list(map(
             lambda x: RS{tag.capitalize()}(
+                id=x.id,
                 uid=x.uid,
                 # Add additional fields here
             ),
             result,
         ))
         return RS{tag.capitalize()}List(
-            data=result2,
+            data=mapped_result,
             total=0,
             page=0,
             page_size=0,
@@ -103,7 +105,7 @@ async def create_{tag}(
 
 
 @router.delete("/id/{{id}}", status_code=204, tags=[tag])
-async def delete_{tag}(id: str, db: AsyncSession = Depends(get_async_db)) -> None:
+async def delete_{tag}(id: str | int, db: AsyncSession = Depends(get_async_db)) -> None:
     try:
         await {tag.capitalize()}.delete(db, id)
     except Exception as e:
@@ -113,7 +115,7 @@ async def delete_{tag}(id: str, db: AsyncSession = Depends(get_async_db)) -> Non
 
 @router.put("/id/{{id}}", response_model=RS{tag.capitalize()}, status_code=200, tags=[tag])
 async def update_{tag}(
-    id: str, {tag}: RQ{tag.capitalize()}, db: AsyncSession = Depends(get_async_db)
+    id: str | int, {tag}: RQ{tag.capitalize()}, db: AsyncSession = Depends(get_async_db)
 ) -> RS{tag.capitalize()}:
     try:
         result = await {tag.capitalize()}.update(db, id, {tag}.model_dump())
@@ -135,14 +137,13 @@ from pydantic import BaseModel
 class RQ{tag.capitalize()}(BaseModel):
     """Request schema for creating/updating {tag}"""
     name: str
-    description: str
 
 
 class RS{tag.capitalize()}(BaseModel):
     """Response schema for {tag}"""
+    id: int
     uid: str
     name: str
-    description: str
 
 
 class RS{tag.capitalize()}List(BaseModel):
@@ -173,7 +174,6 @@ from core.database import BaseAsync
 class {tag.capitalize()}(BaseAsync):
     __tablename__ = "{table_name}"
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str] = mapped_column(String, nullable=False)
 '''
 
 
@@ -189,7 +189,6 @@ from .models import {tag.capitalize()}
 async def create_{tag}(
     db: AsyncSession,
     name: str,
-    description: str
 ) -> {tag.capitalize()}:
     """
     Create a new {tag} in the database.
@@ -204,7 +203,6 @@ async def create_{tag}(
     """
     {tag}_obj = {tag.capitalize()}(
         name=name,
-        description=description,
     )
     await {tag}_obj.save(db)
     return {tag}_obj
