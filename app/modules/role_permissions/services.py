@@ -4,6 +4,7 @@ from typing import List
 
 from app.modules.roles.models import Role
 from app.modules.permissions.models import Permission
+from .models import RolePermission
 from .schemas import RSPermissionDetail, RSRolePermissions
 
 
@@ -32,6 +33,19 @@ async def assign_permission_to_role(
         updated_permissions = list(role.permissions) + [permission.id]
         await role.update(db, role_id, {"permissions": updated_permissions})
 
+    # Sync Pivot Table (RolePermission)
+    rp_query = await db.execute(
+        select(RolePermission).where(
+            RolePermission.role_id == role.id,
+            RolePermission.permission_id == permission.id
+        )
+    )
+    if not rp_query.scalar_one_or_none():
+        await RolePermission(
+            role_id=role.id,
+            permission_id=permission.id
+        ).save(db)
+
     return role
 
 
@@ -56,6 +70,16 @@ async def remove_permission_from_role(
     if permission_id in role.permissions:
         updated_permissions = [p for p in role.permissions if p != permission_id]
         await role.update(db, role_id, {"permissions": updated_permissions})
+
+    # Remove from Pivot Table (RolePermission)
+    from sqlalchemy import delete
+    await db.execute(
+        delete(RolePermission).where(
+            RolePermission.role_id == role.id,
+            RolePermission.permission_id == permission_id
+        )
+    )
+    await db.commit()
 
     return role
 

@@ -1,6 +1,8 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.modules.roles.models import Role
+from app.modules.role_permissions.models import RolePermission
 
 
 async def initialize_subscriber_role(db: AsyncSession) -> Role:
@@ -16,20 +18,39 @@ async def initialize_subscriber_role(db: AsyncSession) -> Role:
         query = await Role.find_by_colunm(db, "name", "subscriber")
         subscriber_role = query.scalar_one_or_none()
 
-        if subscriber_role:
+        if not subscriber_role:
+            # Create subscriber role
+            subscriber_role = await Role(
+                name="subscriber",
+                description="Subscriber role with limited access",
+                level=0,
+                permissions=[],
+                disabled=False,
+            ).save(db)
+
+            print(f"[v] Created subscriber role")
+        else:
             print("[v] Subscriber role already exists")
-            return subscriber_role
 
-        # Create subscriber role
-        subscriber_role = await Role(
-            name="subscriber",
-            description="Subscriber role with limited access",
-            level=0,
-            permissions=[],
-            disabled=False,
-        ).save(db)
+        # Sync Pivot Table (RolePermission)
+        subscriber_role_id = subscriber_role.id
+        permission_ids = subscriber_role.permissions
+        for perm_id in permission_ids:
+            rp_query = await db.execute(
+                select(RolePermission).where(
+                    RolePermission.role_id == subscriber_role_id,
+                    RolePermission.permission_id == perm_id
+                )
+            )
+            if not rp_query.scalar_one_or_none():
+                await RolePermission(
+                    role_id=subscriber_role_id,
+                    permission_id=perm_id
+                ).save(db)
 
-        print(f"[v] Created subscriber role")
+        if permission_ids:
+            print(f"[v] Synced subscriber role permissions in pivot table")
+
         return subscriber_role
 
     except Exception as e:

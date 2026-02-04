@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.modules.permissions.models import Permission
 from app.modules.roles.models import Role
 from app.modules.users.models import User
-
+from app.modules.role_permissions.models import RolePermission
 
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -25,35 +25,55 @@ async def initialize_owner_role(db: AsyncSession) -> Role:
         Role: The owner role instance
     """
     try:
-        # Check if owner role already exists
-        query = await Role.find_by_colunm(db, "name", "owner")
-        owner_role = query.scalar_one_or_none()
-
-        if owner_role:
-            print("[v] Owner role already exists")
-            return owner_role
-
-        # Get all permissions
+        # Get all permissions first to ensure we have them for both array and pivot
         result = await db.execute(select(Permission))
         all_permissions = result.scalars().all()
         permission_ids = [perm.id for perm in all_permissions]
 
-        if not permission_ids:
-            print(
-                "! Warning: No permissions found. Owner role will be created without permissions."
+        # Check if owner role already exists
+        query = await Role.find_by_colunm(db, "name", "owner")
+        owner_role = query.scalar_one_or_none()
+
+        if not owner_role:
+            if not permission_ids:
+                print(
+                    "! Warning: No permissions found. Owner role will be created without permissions."
+                )
+                permission_ids = []
+
+            # Create owner role
+            owner_role = await Role(
+                name="owner",
+                description="Owner role with full system access",
+                level=100,
+                permissions=permission_ids,
+                disabled=False,
+            ).save(db)
+            print(f"[v] Created owner role with {len(permission_ids)} permissions (array)")
+        else:
+            print("[v] Owner role already exists")
+            # Update array if needed (optional but good for consistency)
+            if set(owner_role.permissions) != set(permission_ids):
+                owner_role.permissions = permission_ids
+                await owner_role.save(db)
+                print(f"[v] Updated owner role permissions array")
+
+        # Sync Pivot Table (RolePermission)
+        owner_role_id = owner_role.id
+        for perm_id in permission_ids:
+            rp_query = await db.execute(
+                select(RolePermission).where(
+                    RolePermission.role_id == owner_role_id,
+                    RolePermission.permission_id == perm_id
+                )
             )
-            permission_ids = []
-
-        # Create owner role
-        owner_role = await Role(
-            name="owner",
-            description="Owner role with full system access",
-            level=100,
-            permissions=permission_ids,
-            disabled=False,
-        ).save(db)
-
-        print(f"[v] Created owner role with {len(permission_ids)} permissions")
+            if not rp_query.scalar_one_or_none():
+                await RolePermission(
+                    role_id=owner_role_id,
+                    permission_id=perm_id
+                ).save(db)
+        
+        print(f"[v] Synced owner role permissions in pivot table")
         return owner_role
 
     except Exception as e:

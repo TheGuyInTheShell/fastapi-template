@@ -5,7 +5,7 @@ from core.database import get_async_db
 from .schemas import RQAssignPermission, RQRemovePermission, RSRolePermissions
 from .services import (
     assign_permission_to_role,
-    remove_permission_from_role,
+    remove_permission_from_role as remove_permission_from_role_service,
     get_role_permissions,
 )
 from core.cache import Cache
@@ -20,14 +20,17 @@ tag = "role_permissions"
 @router.get(
     "/role/{role_id}", response_model=RSRolePermissions, status_code=200, tags=[tag]
 )
-@cache.cache_endpoint(ttl=60, namespace="role-permissions")
 async def get_role_permissions_endpoint(
-    role_id: str, db: AsyncSession = Depends(get_async_db)
+    role_id: int, db: AsyncSession = Depends(get_async_db)
 ) -> RSRolePermissions:
     """Get all permissions assigned to a role"""
     try:
         result = await get_role_permissions(db, role_id)
-        return result
+        return RSRolePermissions(
+            role_id=result.role_id,
+            role_name=result.role_name,
+            permissions=result.permissions,
+        )
     except Exception as e:
         print(e)
         raise e
@@ -41,7 +44,11 @@ async def assign_permission(
     try:
         await assign_permission_to_role(db, request.role_id, request.permission_id)
         result = await get_role_permissions(db, request.role_id)
-        return result
+        return RSRolePermissions(
+            role_id=result.role_id,
+            role_name=result.role_name,
+            permissions=result.permissions,
+        )
     except Exception as e:
         print(e)
         raise e
@@ -53,9 +60,13 @@ async def remove_permission_from_role(
 ) -> RSRolePermissions:
     """Remove a permission from a role"""
     try:
-        await remove_permission_from_role(db, request.role_id, request.permission_id)
+        await remove_permission_from_role_service(db, request.role_id, request.permission_id)
         result = await get_role_permissions(db, request.role_id)
-        return result
+        return RSRolePermissions(
+            role_id=result.role_id,
+            role_name=result.role_name,
+            permissions=result.permissions,
+        )
     except Exception as e:
         print(e)
         raise e

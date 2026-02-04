@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from .models import Permission
 from .schemas import RQCreatePermission, RQBulkPermission, RSPermission, RSBulkPermissionResult
 from app.modules.roles.models import Role
+from app.modules.role_permissions.models import RolePermission
 from sqlalchemy import select
 
 
@@ -92,6 +93,20 @@ async def create_bulk_permissions_with_roles(
             if permission.id not in role.permissions:
                 updated_permissions = list(role.permissions) + [permission.id]
                 await role.update(db, perm_data.role_id, {"permissions": updated_permissions})
+            
+            # Sync Pivot Table (RolePermission)
+            permission_id = permission.id
+            rp_query = await db.execute(
+                select(RolePermission).where(
+                    RolePermission.role_id == perm_data.role_id,
+                    RolePermission.permission_id == permission_id
+                )
+            )
+            if not rp_query.scalar_one_or_none():
+                await RolePermission(
+                    role_id=perm_data.role_id,
+                    permission_id=permission_id
+                ).save(db)
             
             # Agregar resultado exitoso
             results.append(RSBulkPermissionResult(

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.modules.permissions.models import Permission
 from app.modules.roles.models import Role
 from app.modules.users.models import User
-
+from app.modules.role_permissions.models import RolePermission
 
 
 hash_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -29,22 +29,41 @@ async def initialize_observer_role(db: AsyncSession) -> Role:
         query = await Role.find_by_colunm(db, "name", "observer")
         observer_role = query.scalar_one_or_none()
 
-        if observer_role:
+        if not observer_role:
+            # Observer role has no permissions - only metrics access controlled separately
+            # Level 50 is below owner (100) but above subscriber
+            
+            observer_role = await Role(
+                name="observer",
+                description="Observer role with metrics access only",
+                level=50,
+                permissions=[],  # No standard route permissions
+                disabled=False,
+            ).save(db)
+
+            print(f"[v] Created observer role (metrics access only)")
+        else:
             print("[v] Observer role already exists")
-            return observer_role
 
-        # Observer role has no permissions - only metrics access controlled separately
-        # Level 50 is below owner (100) but above subscriber
-        
-        observer_role = await Role(
-            name="observer",
-            description="Observer role with metrics access only",
-            level=50,
-            permissions=[],  # No standard route permissions
-            disabled=False,
-        ).save(db)
+        # Sync Pivot Table (RolePermission)
+        observer_role_id = observer_role.id
+        permission_ids = observer_role.permissions
+        for perm_id in permission_ids:
+            rp_query = await db.execute(
+                select(RolePermission).where(
+                    RolePermission.role_id == observer_role_id,
+                    RolePermission.permission_id == perm_id
+                )
+            )
+            if not rp_query.scalar_one_or_none():
+                await RolePermission(
+                    role_id=observer_role_id,
+                    permission_id=perm_id
+                ).save(db)
 
-        print(f"[v] Created observer role (metrics access only)")
+        if permission_ids:
+            print(f"[v] Synced observer role permissions in pivot table")
+
         return observer_role
 
     except Exception as e:
