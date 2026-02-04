@@ -26,6 +26,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError, OperationalError, ProgrammingError, DataError
+
+
 from sqlalchemy_utils import create_view, get_mapper
 
 from sqlalchemy import MetaData
@@ -34,6 +37,7 @@ from .async_connection import SessionAsync
 
 from .sync_connection import SessionSync
 
+from core.database.exceptions import DatabaseError, DatabaseConnectionError, DatabaseQueryError, DatabaseIntegrityError, DatabaseDataError, DatabaseOperationalError, DatabaseProgrammingError
 
 from .async_connection import engineAsync
 
@@ -126,13 +130,22 @@ class BaseAsync(DeclarativeBase):
         return result
 
     async def save(self, db: AsyncSession):
+        try:
+            db.add(self)
 
-        db.add(self)
+            await db.commit()
 
-        await db.commit()
-
-        await db.refresh(self)
-        return self
+            await db.refresh(self)
+            return self
+        except IntegrityError as e:
+            await db.rollback()
+            raise DatabaseIntegrityError(str(e))
+        except OperationalError as e:
+            await db.rollback()
+            raise DatabaseOperationalError(str(e))
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise DatabaseError(str(e))
 
     @classmethod
     def create_global_views(cls):
@@ -178,7 +191,7 @@ class BaseAsync(DeclarativeBase):
 
         if reg is None or reg.is_deleted:
 
-            raise ValueError(f"No exists the register {cls.__tablename__}")
+            raise DatabaseQueryError(f"No exists the register {cls.__tablename__}")
 
         is_deleted = True
 
@@ -187,18 +200,25 @@ class BaseAsync(DeclarativeBase):
         data = {"is_deleted": is_deleted, "deleted_at": deleted_at}
 
         try:
-            val_id = int(str(id))
-            query = update(cls).where(cls.id == val_id).values(**data)
-        except ValueError:
-            query = update(cls).where(cls.uid == id).values(**data)
+            try:
+                val_id = int(str(id))
+                query = update(cls).where(cls.id == val_id).values(**data)
+            except ValueError:
+                query = update(cls).where(cls.uid == id).values(**data)
 
-        await db.execute(query)
+            await db.execute(query)
 
-        await db.commit()
+            await db.commit()
 
-        await db.refresh(reg)
+            await db.refresh(reg)
 
-        return reg
+            return reg
+        except IntegrityError as e:
+            await db.rollback()
+            raise DatabaseIntegrityError(str(e))
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise DatabaseError(str(e))
 
     @classmethod
     async def update(cls, db: AsyncSession, id: int | str, data: dict):
@@ -211,41 +231,51 @@ class BaseAsync(DeclarativeBase):
 
         if reg is None or reg.is_deleted:
 
-            raise ValueError(f"No exists the register in {cls.__tablename__}")
+            raise DatabaseQueryError(f"No exists the register in {cls.__tablename__}")
 
         try:
-            val_id = int(str(id))
-            query = update(cls).where(cls.id == val_id).values(**data)
-        except ValueError:
-            query = update(cls).where(cls.uid == id).values(**data)
+            try:
+                val_id = int(str(id))
+                query = update(cls).where(cls.id == val_id).values(**data)
+            except ValueError:
+                query = update(cls).where(cls.uid == id).values(**data)
 
-        await db.execute(query)
+            await db.execute(query)
 
-        await db.commit()
+            await db.commit()
 
-        await db.refresh(reg)
+            await db.refresh(reg)
 
-        return reg
+            return reg
+        except IntegrityError as e:
+            await db.rollback()
+            raise DatabaseIntegrityError(str(e))
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise DatabaseError(str(e))
 
     @classmethod
     async def find_one(cls, db: AsyncSession, id: Union[int, str]) -> Self:
 
         try:
-            val_id = int(str(id))
-            query = select(cls).where(cls.id == val_id)
-        except ValueError:
-            query = select(cls).where(cls.uid == id)
+            try:
+                val_id = int(str(id))
+                query = select(cls).where(cls.id == val_id)
+            except ValueError:
+                query = select(cls).where(cls.uid == id)
 
-        result = (await db.execute(query)).scalar_one_or_none()
+            result = (await db.execute(query)).scalar_one_or_none()
 
-        if result is None:
+            if result is None:
 
-            raise ValueError(f"Not exists the register in {cls.__tablename__}")
+                raise DatabaseQueryError(f"Not exists the register in {cls.__tablename__}")
 
-        if result.is_deleted:
+            if result.is_deleted:
 
-            raise ValueError(f"The register {cls.__tablename__} is deleted")
-        return result
+                raise DatabaseQueryError(f"The register {cls.__tablename__} is deleted")
+            return result
+        except SQLAlchemyError as e:
+            raise DatabaseQueryError(str(e))
 
     @classmethod
     async def find_all(
@@ -254,23 +284,25 @@ class BaseAsync(DeclarativeBase):
         status: Literal["deleted", "exists", "all"] = "all",
         filters: dict = dict(),
     ) -> List[Self]:
+        try:
+            base_query = select(cls).filter_by(**filters)
 
-        base_query = select(cls).filter_by(**filters)
+            if status == "deleted":
 
-        if status == "deleted":
+                base_query = cls.get_deleted().select().filter_by(**filters)
 
-            base_query = cls.get_deleted().select().filter_by(**filters)
+            if status == "exists":
 
-        if status == "exists":
+                base_query = cls.get_exists().select().filter_by(**filters)
 
-            base_query = cls.get_exists().select().filter_by(**filters)
-
-        result = (
-            (await db.execute(base_query)).scalars().all()
-            if status == "all"
-            else (await db.execute(base_query)).all()
-        )
-        return result # type: ignore
+            result = (
+                (await db.execute(base_query)).scalars().all()
+                if status == "all"
+                else (await db.execute(base_query)).all()
+            )
+            return result # type: ignore
+        except SQLAlchemyError as e:
+            raise DatabaseQueryError(str(e))
 
     @classmethod
     def get_order_by(cls, order_by: str) -> Column | None:
@@ -289,97 +321,103 @@ class BaseAsync(DeclarativeBase):
         status: Literal["deleted", "exists", "all"] = "all",
         filters: dict = {},
     ) -> List[Self]:
+        try:
+            # Determine the source and initial query
 
-        # Determine the source and initial query
+            if status == "deleted":
 
-        if status == "deleted":
+                selectable = cls.get_deleted()
 
-            selectable = cls.get_deleted()
+                base_query = selectable.select().filter_by(**filters)
 
-            base_query = selectable.select().filter_by(**filters)
+            elif status == "exists":
 
-        elif status == "exists":
+                selectable = cls.get_exists()
 
-            selectable = cls.get_exists()
+                base_query = selectable.select().filter_by(**filters)
 
-            base_query = selectable.select().filter_by(**filters)
+            else:  # status == 'all'
 
-        else:  # status == 'all'
+                selectable = cls.__table__ # type: ignore
 
-            selectable = cls.__table__ # type: ignore
+                base_query = select(cls).filter_by(**filters)
 
-            base_query = select(cls).filter_by(**filters)
+            # Determine the order column
 
-        # Determine the order column
+            order_column = None
 
-        order_column = None
+            if order_by:
 
-        if order_by:
+                if status == "all":
 
-            if status == "all":
+                    # Try to get from model columns first, then table columns
 
-                # Try to get from model columns first, then table columns
+                    order_column = getattr(cls, order_by, None)
 
-                order_column = getattr(cls, order_by, None)
+                    if order_column is None:
 
-                if order_column is None:
+                        order_column = selectable.c.get(order_by)
+
+                else:
 
                     order_column = selectable.c.get(order_by)
 
-            else:
+            # Fallback to id if no order column found
 
-                order_column = selectable.c.get(order_by)
+            if order_column is None:
 
-        # Fallback to id if no order column found
-
-        if order_column is None:
-
-            if status == "all":
-                order_column = cls.id
-
-            else:
-
-                order_column = selectable.c.get("id")
-
-                if order_column is None:
+                if status == "all":
                     order_column = cls.id
 
-        # Apply ordering
+                else:
 
-        if order_column is not None:
+                    order_column = selectable.c.get("id")
 
-            if ord == "desc":
+                    if order_column is None:
+                        order_column = cls.id
 
-                base_query = base_query.order_by(order_column.desc())
+            # Apply ordering
 
-            else:
+            if order_column is not None:
 
-                base_query = base_query.order_by(order_column.asc())
+                if ord == "desc":
 
-        # Pagination
+                    base_query = base_query.order_by(order_column.desc())
 
-        if pag <= 0:
+                else:
 
-            pag = 1
+                    base_query = base_query.order_by(order_column.asc())
 
-        query = base_query.limit(10).offset((pag - 1) * 10)
+            # Pagination
+
+            if pag <= 0:
+
+                pag = 1
+
+            query = base_query.limit(10).offset((pag - 1) * 10)
 
 
-        exec_result = await db.execute(query)
-        rows = exec_result.scalars().all() if status == "all" else exec_result.all()
-        return rows if status == "all" else cls.touple_to_dict(rows) # type: ignore
+            exec_result = await db.execute(query)
+            rows = exec_result.scalars().all() if status == "all" else exec_result.all()
+            return rows if status == "all" else cls.touple_to_dict(rows) # type: ignore
+        except SQLAlchemyError as e:
+            raise DatabaseQueryError(str(e))
 
     @classmethod
     async def find_by_colunm(cls, db: AsyncSession, column: str, value: Any):
-
-        result = await db.execute(select(cls).where(getattr(cls, column) == value))
-        return result
+        try:
+            result = await db.execute(select(cls).where(getattr(cls, column) == value))
+            return result
+        except SQLAlchemyError as e:
+            raise DatabaseQueryError(str(e))
 
     @classmethod
     async def find_by_specification(cls, db: AsyncSession, specification: dict):
-
-        result = await db.execute(select(cls).where(**specification))
-        return result
+        try:
+            result = await db.execute(select(cls).where(**specification))
+            return result
+        except SQLAlchemyError as e:
+            raise DatabaseQueryError(str(e))
 
 
 class BaseSync(DeclarativeBase):
