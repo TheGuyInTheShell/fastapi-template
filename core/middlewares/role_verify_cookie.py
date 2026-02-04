@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.future import select
 from app.modules.roles.models import Role
 from app.modules.permissions.models import Permission
+from app.modules.role_permissions.models import RolePermission
 from app.modules.users.models import User
 from app.modules.users.schemas import RSUserTokenData
 from app.modules.permissions.const import admin_type
@@ -79,18 +80,7 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
                 headers={"Location": "/admin/sign-in"},
             )
         
-        role: Role = await Role.find_one(db, payload.role)
-        if not role:
-            await db.close()
-            raise HTTPException(
-                status_code=status.HTTP_302_FOUND,
-                detail="Invalid role",
-                headers={"Location": "/admin/sign-in"},
-            )
-
-        permissions_users = set(role.permissions)
-
-        # Get required permission for this route
+        # Verify required permission for this route
         route_name = request.scope["route"].name
         method = request.method
 
@@ -104,10 +94,8 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
             )
         ).scalar_one_or_none()
 
-        await db.close()
-
-        # Check if permission exists and user has it
         if not permission_require:
+            await db.close()
             user_data = RSUserTokenData(
                 id=payload.id or 0,
                 uid=payload.uid or (payload.id if isinstance(payload.id, str) else ""),
@@ -120,7 +108,19 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
             request.state.user = user_data
             return user_data
 
-        if permission_require.id in permissions_users:
+        # Check if user has permission via pivot table
+        has_permission = (
+            await db.execute(
+                select(RolePermission).where(
+                    RolePermission.role_id == payload.role,
+                    RolePermission.permission_id == permission_require.id
+                )
+            )
+        ).scalar_one_or_none()
+
+        await db.close()
+
+        if has_permission:
             user_data = RSUserTokenData(
                 id=payload.id or 0,
                 uid=payload.uid or (payload.id if isinstance(payload.id, str) else ""),

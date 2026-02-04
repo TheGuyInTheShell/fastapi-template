@@ -1,31 +1,14 @@
 from fastapi import Depends, HTTPException, Request, status, Response
-
-from fastapi.security import HTTPBearer
-
 from sqlalchemy.future import select
-
-
-from core.database import get_async_db
-
+from core.database import SessionAsync
 from app.modules.auth.controller import oauth2_schema
-
 from app.modules.auth.schemas import RSUser
 from app.modules.auth.services import decode_token, create_token
-
 from app.modules.permissions.models import Permission
-from app.modules.roles.models import Role
+from app.modules.role_permissions.models import RolePermission
 from app.modules.permissions.const import api_type
-
-from core.database import SessionAsync
-
 from typing import Callable
-
-import asyncio
-
-
 from .jwt_verify import JWT_VERIFY
-
-
 from core.config.globals import settings
 
 mode = settings.MODE
@@ -87,12 +70,7 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            role: Role = await Role.find_one(db, payload.role)
-
-            permissions_users = set(role.permissions)
-
             (name,) = (request.scope["route"].name,)
-
             method = request.method
 
             permission_require = (
@@ -105,17 +83,27 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                 )
             ).scalar_one_or_none()
 
-            await db.close()
-
             if not permission_require:
+                await db.close()
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User unauthorized",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            if permission_require.id in permissions_users:
+            # Check if user has permission via pivot table
+            has_permission = (
+                await db.execute(
+                    select(RolePermission).where(
+                        RolePermission.role_id == payload.role,
+                        RolePermission.permission_id == permission_require.id
+                    )
+                )
+            ).scalar_one_or_none()
 
+            await db.close()
+
+            if has_permission:
                 return RSUser(
                     id=payload.id or 0,
                     uid=payload.uid or (payload.id if isinstance(payload.id, str) else ""),
@@ -125,9 +113,7 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                     role=payload.role or "",
                     otp_enabled=payload.otp_enabled,
                 )
-
             else:
-                
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User unauthorized",
