@@ -38,6 +38,7 @@ try:
     from starlette.responses import Response
 
     version = "1.0.0"
+    api_version = "v1"
 
     mode = settings.MODE
     if mode != "DEVELOPMENT":
@@ -137,7 +138,7 @@ try:
 
     admin_routes = init_admin(templates, app)
 
-    app.include_router(api_router)
+    app.include_router(api_router, prefix=f"/api/{api_version}")
 
     # Database initialization models (Deprecated in favor of Alembic)
     BaseSync.metadata.create_all(engineSync)
