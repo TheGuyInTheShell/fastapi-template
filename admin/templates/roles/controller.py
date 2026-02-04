@@ -57,7 +57,7 @@ class InitTemplate:
             name: Annotated[str, Form()],
             description: Annotated[str, Form()],
             level: Annotated[int, Form()],
-            permissions: Annotated[List[str], Form()] = [],
+            permissions: Annotated[List[int], Form()] = [],
             db: AsyncSession = Depends(get_async_db),
         ):
             try:
@@ -100,14 +100,14 @@ class InitTemplate:
         @self.router.get("/edit/{role_id}", response_class=HTMLResponse)
         async def admin_edit_role_page(
             request: Request,
-            role_id: str,
+            role_id: int,
             db: AsyncSession = Depends(get_async_db),
         ):
             try:
                 role = await Role.find_one(db, role_id)
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
-                role_permission_uids = set(role.permissions)
+                role_permission_ids = set(role.permissions)
 
                 return self.templates.TemplateResponse(
                     "pages/roles_edit.html",
@@ -115,7 +115,7 @@ class InitTemplate:
                         "request": request,
                         "role": role,
                         "all_permissions": all_permissions,
-                        "role_permission_uids": role_permission_uids,
+                        "role_permission_ids": role_permission_ids,
                     },
                 )
             except Exception as e:
@@ -125,11 +125,11 @@ class InitTemplate:
         @self.router.post("/edit/{role_id}", response_class=HTMLResponse)
         async def admin_edit_role(
             request: Request,
-            role_id: str,
+            role_id: int,
             name: Annotated[str, Form()],
             description: Annotated[str, Form()],
             level: Annotated[int, Form()],
-            permissions: Annotated[List[str], Form()] = [],
+            permissions: Annotated[List[int], Form()] = [],
             db: AsyncSession = Depends(get_async_db),
         ):
             try:
@@ -147,7 +147,7 @@ class InitTemplate:
 
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
-                role_permission_uids = set(role.permissions)
+                role_permission_ids = set(role.permissions)
 
                 return self.templates.TemplateResponse(
                     "pages/roles_edit.html",
@@ -156,7 +156,7 @@ class InitTemplate:
                         "success": True,
                         "role": role,
                         "all_permissions": all_permissions,
-                        "role_permission_uids": role_permission_uids,
+                        "role_permission_ids": role_permission_ids,
                     },
                 )
             except Exception as e:
@@ -164,7 +164,7 @@ class InitTemplate:
                 role = await Role.find_one(db, role_id)
                 all_perms = await Permission.find_all(db, status="exists")
                 all_permissions = [p for p in all_perms]
-                role_permission_uids = set(role.permissions)
+                role_permission_ids = set(role.permissions)
 
                 return self.templates.TemplateResponse(
                     "pages/roles_edit.html",
@@ -174,7 +174,7 @@ class InitTemplate:
                         "detail": str(e),
                         "role": role,
                         "all_permissions": all_permissions,
-                        "role_permission_uids": role_permission_uids,
+                        "role_permission_ids": role_permission_ids,
                     },
                 )
 
@@ -183,7 +183,7 @@ class InitTemplate:
         @self.router.delete("/partial/delete/{role_id}", response_class=HTMLResponse)
         async def admin_delete_role(
             request: Request,
-            role_id: str,
+            role_id: int,
             db: AsyncSession = Depends(get_async_db),
         ):
             try:

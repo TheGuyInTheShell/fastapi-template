@@ -8,7 +8,11 @@ from typing import Optional
 import fastapi
 import pydantic_settings
 import asyncio
+from abc import ABC
 
+
+class Settings(ABC):
+    pass
 
 class PluginError(Exception):
     pass
@@ -22,12 +26,12 @@ class PluginSettings(pydantic_settings.BaseSettings):
 
 
 class Plugin:
-    DEFAULT_CONFIG_CLASS: Optional[pydantic_settings.BaseSettings] = None
+    DEFAULT_CONFIG_CLASS: Optional[Settings] = None
 
     def __init__(
             self,
             app: Optional[fastapi.FastAPI] = None,
-            config: Optional[pydantic_settings.BaseSettings] = None
+            config: Optional[Settings] = None
     ):
         self._on_init()
         if app:
@@ -46,13 +50,13 @@ class Plugin:
     async def _on_call(self) -> typing.Any:
         raise NotImplementedError('implement _on_call()')
 
-    async def initialize(self, app: fastapi.FastAPI, config: Optional[pydantic_settings.BaseSettings]=None):
+    async def initialize(self, app: fastapi.FastAPI, config: Optional[Settings]=None):
         pass
 
     async def init_app(
             self,
             app: fastapi.FastAPI,
-            config: Optional[pydantic_settings.BaseSettings]=None,
+            config: Optional[Settings]=None,
             *args,
             **kwargs
     ) -> None:

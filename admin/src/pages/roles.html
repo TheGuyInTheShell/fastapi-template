@@ -31,10 +31,10 @@
                     <td><span class="badge badge-outline">{{ role.permissions|length }} permissions</span></td>
                     <td>
                         <div class="flex gap-2">
-                            <a href="/admin/roles/edit/{{ role.uid }}" class="btn btn-sm btn-warning">
+                            <a href="/admin/roles/edit/{{ role.id }}" class="btn btn-sm btn-warning">
                                 Edit
                             </a>
-                            <button class="btn btn-sm btn-error" hx-delete="/admin/roles/partial/delete/{{ role.uid }}"
+                            <button class="btn btn-sm btn-error" hx-delete="/admin/roles/partial/delete/{{ role.id }}"
                                 hx-confirm="Are you sure you want to delete this role?" hx-target="closest tr"
                                 hx-swap="outerHTML">
                                 Delete

@@ -62,7 +62,7 @@ class InitTemplate:
                     temp_token = create_token(
                         data={
                             "sub": user.username,
-                            "id": user.uid,
+                            "id": user.id,
                             "type": "partial_2fa",
                             "role": "guest"
                         }, 
@@ -84,7 +84,7 @@ class InitTemplate:
                         "email": user.email,
                         "role": user.role,
                         "full_name": user.full_name,
-                        "id": user.uid,
+                        "id": user.id,
                     },
                     expires_time=expires_time,
                 )
@@ -95,7 +95,7 @@ class InitTemplate:
                         "email": user.email,
                         "role": user.role,
                         "full_name": user.full_name,
-                        "id": user.uid,
+                        "id": user.id,
                     }
                 )
 
@@ -140,10 +140,11 @@ class InitTemplate:
                 if not payload or payload.type != "partial_2fa":
                     raise HTTPException(status_code=401, detail="Invalid session")
                 
-                uid = payload.id
+                user_id = payload.id
+                if user_id is None:
+                    raise HTTPException(status_code=401, detail="Invalid session")
 
-                query = await User.find_by_colunm(db, "uid", uid)
-                user = query.scalar_one_or_none()
+                user = await User.find_one(db, user_id)
                 
                 if not user:
                     raise HTTPException(status_code=401, detail="User not found")
@@ -164,7 +165,7 @@ class InitTemplate:
                         "email": user.email,
                         "role": user.role_ref,
                         "full_name": user.full_name,
-                        "id": user.uid,
+                        "id": user.id,
                     },
                     expires_time=expires_time,
                 )
@@ -175,7 +176,7 @@ class InitTemplate:
                         "email": user.email,
                         "role": user.role_ref,
                         "full_name": user.full_name,
-                        "id": user.uid,
+                        "id": user.id,
                     }
                 )
 

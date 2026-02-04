@@ -8,15 +8,15 @@ class RQRole(BaseModel):
     name: str
     description: str
     level: int
-    permissions: list[str]
+    permissions: list[int]
 
 
 class RSRole(BaseModel):
-    uid: str
+    id: int
     name: str
     description: str
     level: int
-    permissions: list[str]
+    permissions: list[int]
 
 
 class RSRoleList(BaseModel):

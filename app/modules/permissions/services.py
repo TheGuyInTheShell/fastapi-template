@@ -89,13 +89,14 @@ async def create_bulk_permissions_with_roles(
             role = await Role.find_one(db, perm_data.role_id)
             
             # Asignar el permiso al rol si no está ya asignado
-            if permission.uid not in role.permissions:
-                updated_permissions = list(role.permissions) + [permission.uid]
+            if permission.id not in role.permissions:
+                updated_permissions = list(role.permissions) + [permission.id]
                 await role.update(db, perm_data.role_id, {"permissions": updated_permissions})
             
             # Agregar resultado exitoso
             results.append(RSBulkPermissionResult(
                 permission=RSPermission(
+                    id=permission.id,
                     uid=permission.uid,
                     type=permission.type,
                     name=permission.name,
@@ -112,6 +113,7 @@ async def create_bulk_permissions_with_roles(
             # Agregar resultado con error
             results.append(RSBulkPermissionResult(
                 permission=RSPermission(
+                    id=0,
                     uid="",
                     type=perm_data.type,
                     name=perm_data.name,

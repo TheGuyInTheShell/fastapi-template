@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Index, String, types
+from sqlalchemy import ForeignKey, Index, Integer, String, types
 
 from sqlalchemy.dialects.postgresql import TSVECTOR
 
@@ -22,8 +22,8 @@ class User(BaseAsync):
 
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
 
-    role_ref: Mapped[str] = mapped_column(
-        String, ForeignKey("roles.uid"), nullable=False
+    role_ref: Mapped[int] = mapped_column(
+        Integer, ForeignKey("roles.id"), nullable=False
     )
 
     role: Mapped[Role] = relationship("Role")

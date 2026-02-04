@@ -3,17 +3,17 @@ from typing import List
 
 
 class RQAssignPermission(BaseModel):
-    role_id: str
-    permission_id: str
+    role_id: int
+    permission_id: int
 
 
 class RQRemovePermission(BaseModel):
-    role_id: str
-    permission_id: str
+    role_id: int
+    permission_id: int
 
 
 class RSPermissionDetail(BaseModel):
-    uid: str
+    id: int
     name: str
     action: str
     description: str
@@ -21,6 +21,6 @@ class RSPermissionDetail(BaseModel):
 
 
 class RSRolePermissions(BaseModel):
-    role_uid: str
+    role_id: int
     role_name: str
     permissions: List[RSPermissionDetail]

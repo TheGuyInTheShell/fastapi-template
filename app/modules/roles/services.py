@@ -18,7 +18,8 @@ async def create_role(db: AsyncSession, rq_role: RQRole) -> RSRole:
 
         for permission in tuple(rq_role.permissions):
             try:
-                permissions.append((await Permission.find_one(db, permission)).uid)
+                permission_obj = await Permission.find_one(db, permission)
+                permissions.append(permission_obj.id)
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=e.args[0])
 

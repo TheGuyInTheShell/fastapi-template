@@ -140,8 +140,8 @@ try:
     app.include_router(api_router)
 
     # Database initialization models (Deprecated in favor of Alembic)
-    # BaseSync.metadata.create_all(engineSync)
-    # BaseAsync.metadata.create_all(engineSync)
+    BaseSync.metadata.create_all(engineSync)
+    BaseAsync.metadata.create_all(engineSync)
 
 
     asyncio.ensure_future(init_auth([*routes, *admin_routes], SessionAsync))

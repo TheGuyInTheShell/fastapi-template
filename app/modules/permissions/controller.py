@@ -31,6 +31,7 @@ async def get_Permission(
         result: Permission = await Permission.find_one(db, id)
         return RSPermission(
             uid=result.uid,
+            id=result.id,
             action=result.action,
             description=result.description,
             name=result.name,
@@ -53,6 +54,7 @@ async def get_Permissions(
         result2 = list(map(
             lambda x: RSPermission(
                 uid=x.uid,
+                id=x.id,
                 action=x.action,
                 description=x.description,
                 name=x.name,
@@ -87,6 +89,7 @@ async def get_all_Permissions(
         result2 = list(map(
             lambda x: RSPermission(
                 uid=x.uid,
+                id=x.id,
                 action=x.action,
                 description=x.description,
                 name=x.name,

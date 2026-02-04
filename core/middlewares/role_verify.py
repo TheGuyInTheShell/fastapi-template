@@ -67,6 +67,7 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                                 "role": payload.role,
                                 "full_name": payload.full_name,
                                 "id": payload.id,
+                                "uid": payload.uid,
                             }
                         )
                         # Set metadata in response header
@@ -104,7 +105,7 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                 )
             ).scalar_one_or_none()
 
-            asyncio.ensure_future(db.close())
+            await db.close()
 
             if not permission_require:
                 raise HTTPException(
@@ -113,18 +114,20 @@ def ROLE_VERIFY(omit_routes: list = []) -> Callable:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            if permission_require.uid in permissions_users:
+            if permission_require.id in permissions_users:
 
                 return RSUser(
-                    uid=payload.id or "",
+                    id=payload.id or 0,
+                    uid=payload.uid or (payload.id if isinstance(payload.id, str) else ""),
                     username=payload.sub,
                     email=payload.email or "",
                     full_name=payload.full_name or "",
                     role=payload.role or "",
+                    otp_enabled=payload.otp_enabled,
                 )
 
             else:
-
+                
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User unauthorized",

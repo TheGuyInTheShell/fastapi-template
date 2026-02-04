@@ -53,6 +53,7 @@ async def authenticade_user(db: AsyncSession, username: str, password: str) -> R
             raise HTTPException(status_code=401, detail="Incorrect password")
         result = RSUser(
             uid=user.uid,
+            id=user.id,
             username=user.username,
             email=user.email,
             full_name=user.full_name,
@@ -77,11 +78,12 @@ async def create_user(db: AsyncSession, user_data: RQUser) -> dict | None:
             password=hash_context.hash(user_data.password),
             email=user_data.email,
             full_name=user_data.full_name,
-            role_ref=subscriber_role.uid,
+            role_ref=subscriber_role.id,
         ).save(db)
 
         return {
             "uid": user.uid,
+            "id": user.id,
             "username": user.username,
             "email": user.email,
             "full_name": user.full_name,

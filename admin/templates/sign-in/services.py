@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 
-async def has_permission(db: AsyncSession, role_id: str, route_name: str, method: str):
+async def has_permission(db: AsyncSession, role_id: int, route_name: str, method: str):
     try:
         
         query = await db.execute(
@@ -32,7 +32,7 @@ async def has_permission(db: AsyncSession, role_id: str, route_name: str, method
             return False
         
 
-        if permission.uid in set(role.permissions):
+        if permission.id in set(role.permissions):
             return True
         
         return False

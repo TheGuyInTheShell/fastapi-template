@@ -6,7 +6,7 @@ from app.modules.roles.models import Role
 async def initialize_subscriber_role(db: AsyncSession) -> Role:
     """
     Creates or retrieves the subscriber role with no permissions.
-    Subscriber role has level 100.
+    Subscriber role has level 0 (lowest privilege).
 
     Returns:
         Role: The subscriber role instance

@@ -25,7 +25,7 @@
     {% endif %}
 
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="/admin/users/edit/{{ user.uid }}">
+        <form method="POST" action="/admin/users/edit/{{ user.id }}">
             <div class="form-control mb-4">
                 <label class="label">
                     <span class="label-text font-semibold">Username *</span>
@@ -54,10 +54,10 @@
                 <label class="label">
                     <span class="label-text font-semibold">Role *</span>
                 </label>
-                <select name="role_uid" class="select select-bordered w-full" required>
+                <select name="role_id" class="select select-bordered w-full" required>
                     <option value="" disabled>Select a role</option>
                     {% for role in roles %}
-                    <option value="{{ role.uid }}" {% if role.uid==user.role_ref %}selected{% endif %}>
+                    <option value="{{ role.id }}" {% if role.id==user.role_ref %}selected{% endif %}>
                         {{ role.name }} (Level: {{ role.level }})
                     </option>
                     {% endfor %}

@@ -56,10 +56,11 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
              temp_token = create_token(
                 data={
                     "sub": user.username,
-                    "id": user.uid,
-                    "type": "partial_2fa",
-                     # Short expiry for this step
-                    "role": "guest" # No permissions
+                     "id": user.id,
+                     "uid": user.uid,
+                     "type": "partial_2fa",
+                      # Short expiry for this step
+                     "role": "guest" # No permissions
                 }, 
                 expires_time=300 # 5 minutes
              )
@@ -79,7 +80,8 @@ async def sign_in(user_data: RQUserLogin, db: AsyncSession = Depends(get_async_d
                 "email": user.email,
                 "role": user.role,
                 "full_name": user.full_name,
-                "id": user.uid,
+                "id": user.id,
+                "uid": user.uid,
             }
         )
 
@@ -164,7 +166,8 @@ async def refresh_token_endpoint(
             "email": email,
             "role": role,
             "full_name": full_name,
-            "id": uid,
+            "id": token_data.id,
+            "uid": token_data.uid,
         }
     )
 
@@ -193,9 +196,11 @@ async def verify_otp(request: OTPVerifyRequest, db: AsyncSession = Depends(get_a
     if not payload or payload.type != "partial_2fa":
         raise HTTPException(status_code=401, detail="Invalid session")
     
-    uid = payload.id
-    user_query = await User.find_by_colunm(db, "uid", uid)
-    user = user_query.scalar_one_or_none()
+    user_id = payload.id
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid session")
+
+    user = await User.find_one(db, user_id)
     
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -214,7 +219,8 @@ async def verify_otp(request: OTPVerifyRequest, db: AsyncSession = Depends(get_a
                 "email": user.email,
                 "role": user.role,
                 "full_name": user.full_name,
-                "id": user.uid,
+                "id": user.id,
+                "uid": user.uid,
             }
         )
     
@@ -303,6 +309,7 @@ async def sign_up(
             raise HTTPException(status_code=500, detail="Error al crear el usuario")
         return RSUser(
             uid=result.get("uid") or "",
+            id=result.get("id") or 0,
             username=result.get("username") or "",
             role=result.get("role") or "",
             full_name=result.get("full_name") or "",

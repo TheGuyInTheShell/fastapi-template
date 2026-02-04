@@ -24,8 +24,7 @@ class InitTemplate:
             
             # Fetch fresh user data including otp_enabled status
             user_data = request.state.user
-            query = await User.find_by_colunm(db, "uid", user_data.uid)
-            user = query.scalar_one_or_none()
+            user = await User.find_one(db, user_data.id)
             
             if not user:
                  raise HTTPException(status_code=401, detail="User not found")
@@ -44,8 +43,7 @@ class InitTemplate:
         async def setup_2fa(request: Request, db: AsyncSession = Depends(get_async_db)):
              # Generate secret and QR code
             user_data = request.state.user
-            query = await User.find_by_colunm(db, "uid", user_data.uid)
-            user = query.scalar_one_or_none()
+            user = await User.find_one(db, user_data.id)
             
             secret = generate_otp_secret()
             uri = get_otp_provisioning_uri(secret, user.username)
@@ -68,8 +66,7 @@ class InitTemplate:
             db: AsyncSession = Depends(get_async_db)
         ):
             user_data = request.state.user
-            query = await User.find_by_colunm(db, "uid", user_data.uid)
-            user = query.scalar_one_or_none()
+            user = await User.find_one(db, user_data.id)
             
             if verify_otp_code(secret, otp_code):
                 user.otp_secret = secret
@@ -102,11 +99,10 @@ class InitTemplate:
         @self.router.post("/2fa/disable", response_class=HTMLResponse)
         async def disable_2fa(request: Request, db: AsyncSession = Depends(get_async_db)):
             user_data = request.state.user
-            query = await User.find_by_colunm(db, "uid", user_data.uid)
-            user = query.scalar_one_or_none()
+            user = await User.find_one(db, user_data.id)
             
             user.otp_enabled = False
-            user.otp_secret = None
+            user.otp_secret = ""
             await user.save(db)
             
             return self.templates.TemplateResponse(

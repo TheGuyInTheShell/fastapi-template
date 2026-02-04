@@ -19,7 +19,7 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
         # Get access token from cookies
         access_token = request.cookies.get("access_token")
         refresh_token_cookie = request.cookies.get("refresh_token")
-                
+        
         payload = None
 
         # Try access token
@@ -43,6 +43,7 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
                             "role": new_payload.role,
                             "full_name": new_payload.full_name,
                             "id": new_payload.id,
+                            "uid": new_payload.uid,
                         }
                     )
 
@@ -69,6 +70,15 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
         db = SessionAsync()
 
         # Get user's role and permissions
+
+        if not payload.role:
+            await db.close()
+            raise HTTPException(
+                status_code=status.HTTP_302_FOUND,
+                detail="Invalid role",
+                headers={"Location": "/admin/sign-in"},
+            )
+        
         role: Role = await Role.find_one(db, payload.role)
         if not role:
             await db.close()
@@ -99,22 +109,26 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
         # Check if permission exists and user has it
         if not permission_require:
             user_data = RSUserTokenData(
-                uid=payload.id or "",
+                id=payload.id or 0,
+                uid=payload.uid or (payload.id if isinstance(payload.id, str) else ""),
                 username=payload.sub,
                 email=payload.email or "",
                 full_name=payload.full_name or "",
                 role=payload.role or "",
+                otp_enabled=payload.otp_enabled,
             )
             request.state.user = user_data
             return user_data
 
-        if permission_require.uid in permissions_users:
+        if permission_require.id in permissions_users:
             user_data = RSUserTokenData(
-                uid=payload.id or "",
+                id=payload.id or 0,
+                uid=payload.uid or (payload.id if isinstance(payload.id, str) else ""),
                 username=payload.sub,
                 email=payload.email or "",
                 full_name=payload.full_name or "",
                 role=payload.role or "",
+                otp_enabled=payload.otp_enabled,
             )
             request.state.user = user_data
             return user_data
@@ -126,7 +140,7 @@ async def ROLE_VERIFY_COOKIE(request: Request, response: Response) -> RSUserToke
             )
 
     except HTTPException as e:
-        raise
+        raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_302_FOUND,

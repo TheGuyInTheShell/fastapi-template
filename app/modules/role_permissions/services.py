@@ -8,7 +8,7 @@ from .schemas import RSPermissionDetail, RSRolePermissions
 
 
 async def assign_permission_to_role(
-    db: AsyncSession, role_id: str, permission_id: str
+    db: AsyncSession, role_id: int, permission_id: int
 ) -> Role:
     """
     Assigns a permission to a role by adding the permission UID to the role's permissions array.
@@ -27,16 +27,16 @@ async def assign_permission_to_role(
     # Get the permission to verify it exists
     permission = await Permission.find_one(db, permission_id)
 
-    # Add permission UID to role's permissions array if not already present
-    if permission.uid not in role.permissions:
-        updated_permissions = list(role.permissions) + [permission.uid]
+    # Add permission ID to role's permissions array if not already present
+    if permission.id not in role.permissions:
+        updated_permissions = list(role.permissions) + [permission.id]
         await role.update(db, role_id, {"permissions": updated_permissions})
 
     return role
 
 
 async def remove_permission_from_role(
-    db: AsyncSession, role_id: str, permission_id: str
+    db: AsyncSession, role_id: int, permission_id: int
 ) -> Role:
     """
     Removes a permission from a role by removing the permission UID from the role's permissions array.
@@ -52,7 +52,7 @@ async def remove_permission_from_role(
     # Get the role
     role = await Role.find_one(db, role_id)
 
-    # Remove permission UID from role's permissions array if present
+    # Remove permission ID from role's permissions array if present
     if permission_id in role.permissions:
         updated_permissions = [p for p in role.permissions if p != permission_id]
         await role.update(db, role_id, {"permissions": updated_permissions})
@@ -60,7 +60,7 @@ async def remove_permission_from_role(
     return role
 
 
-async def get_role_permissions(db: AsyncSession, role_id: str) -> RSRolePermissions:
+async def get_role_permissions(db: AsyncSession, role_id: int) -> RSRolePermissions:
     """
     Gets all permissions for a role, returning full Permission objects.
 
@@ -76,12 +76,12 @@ async def get_role_permissions(db: AsyncSession, role_id: str) -> RSRolePermissi
 
     # Get all permissions for this role
     permissions = []
-    for permission_uid in role.permissions:
+    for permission_id in role.permissions:
         try:
-            permission = await Permission.find_one(db, permission_uid)
+            permission = await Permission.find_one(db, permission_id)
             permissions.append(
                 RSPermissionDetail(
-                    uid=permission.uid,
+                    id=permission.id,
                     name=permission.name,
                     action=permission.action,
                     description=permission.description,
@@ -93,5 +93,5 @@ async def get_role_permissions(db: AsyncSession, role_id: str) -> RSRolePermissi
             continue
 
     return RSRolePermissions(
-        role_uid=role.uid, role_name=role.name, permissions=permissions
+        role_id=role.id, role_name=role.name, permissions=permissions
     )

@@ -41,7 +41,7 @@ async def get_current_user(
     
     # Retornar el schema Pydantic con los datos del usuario
     return RSUser(
-        uid=user.uid,
+        id=user.id,
         username=user.username,
         full_name=user.full_name,
         email=user.email,

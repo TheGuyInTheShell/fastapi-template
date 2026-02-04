@@ -52,13 +52,13 @@ async def initialize_observer_role(db: AsyncSession) -> Role:
         raise e
 
 
-async def initialize_observer_user(db: AsyncSession, observer_role_uid: str) -> User:
+async def initialize_observer_user(db: AsyncSession, observer_role_id: int) -> User:
     """
     Creates or retrieves the observer user with credentials from environment variables.
 
     Args:
         db: Database session
-        observer_role_uid: UID of the observer role
+        observer_role_id: ID of the observer role
 
     Returns:
         User: The observer user instance
@@ -78,7 +78,7 @@ async def initialize_observer_user(db: AsyncSession, observer_role_uid: str) -> 
             password=hash_context.hash(OBSERVER_PASS),
             email=f"{OBSERVER_EMAIL}",
             full_name="System Observer",
-            role_ref=observer_role_uid,
+            role_ref=observer_role_id,
         ).save(db)
 
         print(f"[v] Created observer user")
@@ -105,15 +105,16 @@ async def initialize_observer(session_factory: async_sessionmaker[AsyncSession])
 
         # Create/verify observer role
         observer_role = await initialize_observer_role(db)
+        role_id = observer_role.id
 
         # Create/verify observer user
-        observer_user = await initialize_observer_user(db, observer_role.uid)
+        observer_user = await initialize_observer_user(db, role_id)
 
         print("=" * 50)
         print("Observer initialization completed successfully")
         print("=" * 50 + "\n")
         
-        return observer_role.uid  # Return the UID for metrics verification
+        return role_id  # Return the ID for metrics verification
 
     except Exception as e:
         print(f"\n[x] Observer initialization failed: {e}\n")

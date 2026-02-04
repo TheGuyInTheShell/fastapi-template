@@ -25,7 +25,7 @@
     {% endif %}
 
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="/admin/roles/edit/{{ role.uid }}">
+        <form method="POST" action="/admin/roles/edit/{{ role.id }}">
             <div class="form-control mb-4">
                 <label class="label">
                     <span class="label-text font-semibold">Role Name *</span>
@@ -63,9 +63,9 @@
                     <div class="grid grid-cols-1 gap-2">
                         {% for permission in all_permissions %}
                         <label class="flex items-center gap-3 p-3 hover:bg-gray-100 rounded cursor-pointer">
-                            <input type="checkbox" name="permissions" value="{{ permission.uid }}"
-                                class="checkbox checkbox-primary" {% if permission.uid in role_permission_uids
-                                %}checked{% endif %} />
+                            <input type="checkbox" name="permissions" value="{{ permission.id }}"
+                                class="checkbox checkbox-primary" {% if permission.id in role_permission_ids %}checked{%
+                                endif %} />
                             <div class="flex-1">
                                 <div class="font-semibold">{{ permission.name }}</div>
                                 <div class="text-sm text-gray-600">

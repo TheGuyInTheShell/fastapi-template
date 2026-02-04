@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from functools import wraps
 import json
-from typing import Any, List, Literal, Self, Sequence, Set
+from typing import Any, List, Literal, Self, Sequence, Set, Union
 
 from sqlalchemy import (
     TIMESTAMP,
@@ -138,28 +138,30 @@ class BaseAsync(DeclarativeBase):
     def create_global_views(cls):
 
         async def create(cls: type[Self]):
+            try:
+                sync_conn = SessionSync()
 
-            sync_conn = SessionSync()
+                sync_conn.execute(text(generate_dll_view(cls.__tablename__, "true")))
 
-            sync_conn.execute(text(generate_dll_view(cls.__tablename__, "true")))
+                sync_conn.execute(text(generate_dll_view(cls.__tablename__, "false")))
 
-            sync_conn.execute(text(generate_dll_view(cls.__tablename__, "false")))
+                sync_conn.commit()
 
-            sync_conn.commit()
+                cls.deleted = create_view(
+                    name=f"{cls.__tablename__}_deleted",
+                    selectable=select(cls).where(cls.is_deleted == True),
+                    metadata=BaseAsync.metadata,
+                )
 
-            cls.deleted = create_view(
-                name=f"{cls.__tablename__}_deleted",
-                selectable=select(cls).where(cls.is_deleted == True),
-                metadata=BaseAsync.metadata,
-            )
+                cls.exists = create_view(
+                    name=f"{cls.__tablename__}_exists",
+                    selectable=select(cls).where(cls.is_deleted == False),
+                    metadata=BaseAsync.metadata,
+                )
 
-            cls.exists = create_view(
-                name=f"{cls.__tablename__}_exists",
-                selectable=select(cls).where(cls.is_deleted == False),
-                metadata=BaseAsync.metadata,
-            )
-
-            sync_conn.close()
+                sync_conn.close()
+            except Exception as e:
+                print(f"[!] Warning: Could not create views for {cls.__tablename__}: {e}")
 
         asyncio.ensure_future(create(cls))
 
@@ -184,11 +186,11 @@ class BaseAsync(DeclarativeBase):
 
         data = {"is_deleted": is_deleted, "deleted_at": deleted_at}
 
-        query = (
-            update(cls).where(cls.id == id).values(**data)
-            if type(id) == int
-            else update(cls).where(cls.uid == id).values(**data)
-        )
+        try:
+            val_id = int(str(id))
+            query = update(cls).where(cls.id == val_id).values(**data)
+        except ValueError:
+            query = update(cls).where(cls.uid == id).values(**data)
 
         await db.execute(query)
 
@@ -211,11 +213,11 @@ class BaseAsync(DeclarativeBase):
 
             raise ValueError(f"No exists the register in {cls.__tablename__}")
 
-        query = (
-            update(cls).where(cls.id == id).values(**data)
-            if type(id) == int
-            else update(cls).where(cls.uid == id).values(**data)
-        )
+        try:
+            val_id = int(str(id))
+            query = update(cls).where(cls.id == val_id).values(**data)
+        except ValueError:
+            query = update(cls).where(cls.uid == id).values(**data)
 
         await db.execute(query)
 
@@ -226,13 +228,13 @@ class BaseAsync(DeclarativeBase):
         return reg
 
     @classmethod
-    async def find_one(cls, db: AsyncSession, id: str | int) -> Self:
+    async def find_one(cls, db: AsyncSession, id: Union[int, str]) -> Self:
 
-        query = (
-            select(cls).where(cls.id == id)
-            if type(id) == int
-            else select(cls).where(cls.uid == id)
-        )
+        try:
+            val_id = int(str(id))
+            query = select(cls).where(cls.id == val_id)
+        except ValueError:
+            query = select(cls).where(cls.uid == id)
 
         result = (await db.execute(query)).scalar_one_or_none()
 

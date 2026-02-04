@@ -19,7 +19,7 @@ OWNER_PASS = settings.OWNER_PASS
 async def initialize_owner_role(db: AsyncSession) -> Role:
     """
     Creates or retrieves the owner role with all available permissions.
-    Owner role has level 0 (highest privilege).
+    Owner role has level 100 (highest privilege).
 
     Returns:
         Role: The owner role instance
@@ -36,24 +36,24 @@ async def initialize_owner_role(db: AsyncSession) -> Role:
         # Get all permissions
         result = await db.execute(select(Permission))
         all_permissions = result.scalars().all()
-        permission_uids = [perm.uid for perm in all_permissions]
+        permission_ids = [perm.id for perm in all_permissions]
 
-        if not permission_uids:
+        if not permission_ids:
             print(
                 "! Warning: No permissions found. Owner role will be created without permissions."
             )
-            permission_uids = []
+            permission_ids = []
 
         # Create owner role
         owner_role = await Role(
             name="owner",
             description="Owner role with full system access",
             level=100,
-            permissions=permission_uids,
+            permissions=permission_ids,
             disabled=False,
         ).save(db)
 
-        print(f"[v] Created owner role with {len(permission_uids)} permissions")
+        print(f"[v] Created owner role with {len(permission_ids)} permissions")
         return owner_role
 
     except Exception as e:
@@ -61,13 +61,13 @@ async def initialize_owner_role(db: AsyncSession) -> Role:
         raise e
 
 
-async def initialize_owner_user(db: AsyncSession, owner_role_uid: str) -> User:
+async def initialize_owner_user(db: AsyncSession, owner_role_id: int) -> User:
     """
     Creates or retrieves the owner user with credentials from environment variables.
 
     Args:
         db: Database session
-        owner_role_uid: UID of the owner role
+        owner_role_id: ID of the owner role
 
     Returns:
         User: The owner user instance
@@ -87,7 +87,7 @@ async def initialize_owner_user(db: AsyncSession, owner_role_uid: str) -> User:
             password=hash_context.hash(OWNER_PASS),
             email=f"{OWNER_EMAIL}",
             full_name="System Owner",
-            role_ref=owner_role_uid,
+            role_ref=owner_role_id,
         ).save(db)
 
         print(f"[v] Created owner user")
@@ -114,9 +114,10 @@ async def initialize_owner(session_factory: async_sessionmaker[AsyncSession]):
 
         # Create/verify owner role
         owner_role = await initialize_owner_role(db)
+        role_id = owner_role.id
 
         # Create/verify owner user
-        owner_user = await initialize_owner_user(db, owner_role.uid)
+        owner_user = await initialize_owner_user(db, role_id)
 
         print("=" * 50)
         print("Owner initialization completed successfully")

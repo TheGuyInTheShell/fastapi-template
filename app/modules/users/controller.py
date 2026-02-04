@@ -37,9 +37,9 @@ async def current_user(token: Annotated[str, Depends(oauth2_schema)]):
             )
 
         return RSUserTokenData(
-            uid=user_data.id or "",
+            id=user_data.id or 0,
             username=user_data.sub or "",
-            role=user_data.role or "",
+            role=user_data.role or 0,
             full_name=user_data.full_name or "",
             email=user_data.email or "",
         )

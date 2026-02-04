@@ -23,7 +23,7 @@ class RQBulkPermission(BaseModel):
     action: str
     description: str
     type: str
-    role_id: str
+    role_id: int | str
 
 
 class RQBulkPermissions(BaseModel):
@@ -33,6 +33,7 @@ class RQBulkPermissions(BaseModel):
 
 class RSPermission(BaseModel):
     uid: str
+    id: int
     type: str
     name: str
     action: str
@@ -42,7 +43,7 @@ class RSPermission(BaseModel):
 class RSBulkPermissionResult(BaseModel):
     """Schema para el resultado de la creación de un permiso en bulk"""
     permission: RSPermission
-    role_id: str
+    role_id: int | str
     success: bool
     error: str | None = None
 

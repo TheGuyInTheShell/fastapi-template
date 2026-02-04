@@ -4,8 +4,9 @@ from pydantic import BaseModel
 class TokenData(BaseModel):
     sub: str
     email: str | None = None
-    id: str | None = None
-    role: str | None = None
+    id: int | str | None = None
+    uid: str | None = None
+    role: int | str | None = None
     full_name: str | None = None
     exp: float | int | None = None
     iat: float | int | None = None

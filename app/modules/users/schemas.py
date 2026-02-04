@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Union
 
 from pydantic import BaseModel, EmailStr
 
@@ -10,7 +11,7 @@ class Roles(Enum):
 
 class RQUser(BaseModel):
     username: str
-    role: str
+    role: Union[int, str]
     password: str
     email: str
     full_name: str
@@ -18,20 +19,21 @@ class RQUser(BaseModel):
 
 # PYDANTIC
 class RSUser(BaseModel):
-    uid: str
+    id: Union[int, str]
     username: str
     full_name: str
     email: EmailStr
-    role: str
+    role: Union[int, str]
 
     otp_enabled: bool = False
     created_at: datetime
 
 
 class RSUserTokenData(BaseModel):
-    uid: str
+    id: Union[int, str]
+    uid: Union[int, str]
     username: str
-    role: str
+    role: Union[int, str]
     full_name: str
     email: EmailStr
     otp_enabled: bool = False

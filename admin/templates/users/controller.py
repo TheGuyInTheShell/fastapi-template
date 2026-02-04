@@ -31,7 +31,7 @@ class InitTemplate:
             roles_by_id = {}
 
             for role in roles_in_users:
-                roles_by_id[role.uid] = role
+                roles_by_id[role.id] = role
 
             return self.templates.TemplateResponse(
                 "pages/users.html",
@@ -46,11 +46,11 @@ class InitTemplate:
                 },
             )
 
-        @self.router.get("/edit/{uid}", response_class=HTMLResponse)
+        @self.router.get("/edit/{id}", response_class=HTMLResponse)
         async def get_edit_page(
-            request: Request, uid: str, db: AsyncSession = Depends(get_async_db)
+            request: Request, id: int, db: AsyncSession = Depends(get_async_db)
         ):
-            user = await User.find_one(db, uid)
+            user = await User.find_one(db, id)
             roles = await Role.find_all(db)
 
             return self.templates.TemplateResponse(
@@ -63,30 +63,30 @@ class InitTemplate:
                 },
             )
 
-        @self.router.post("/edit/{uid}", response_class=HTMLResponse)
+        @self.router.post("/edit/{id}", response_class=HTMLResponse)
         async def post_edit_page(
             request: Request,
-            uid: str,
+            id: int,
             username: str = Form(...),
             full_name: str = Form(...),
             email: str = Form(...),
-            role_uid: str = Form(...),
+            role_id: int = Form(...),
             db: AsyncSession = Depends(get_async_db),
         ):
             try:
                 await User.update(
                     db,
-                    uid,
+                    id,
                     {
                         "username": username,
                         "full_name": full_name,
                         "email": email,
-                        "role_ref": role_uid,
+                        "role_ref": role_id,
                     },
                 )
 
                 # Fetch updated data to re-render if needed, or just redirect/show success
-                user = await User.find_one(db, uid)
+                user = await User.find_one(db, id)
                 roles = await Role.find_all(db)
 
                 return self.templates.TemplateResponse(
@@ -99,7 +99,7 @@ class InitTemplate:
                     },
                 )
             except Exception as e:
-                user = await User.find_one(db, uid)
+                user = await User.find_one(db, id)
                 roles = await Role.find_all(db)
                 return self.templates.TemplateResponse(
                     "pages/users_edit.html",

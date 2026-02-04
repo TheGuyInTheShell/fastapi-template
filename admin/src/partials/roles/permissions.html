@@ -25,10 +25,9 @@
             {% for permission in all_permissions %}
             <tr>
                 <td>
-                    <input type="checkbox" class="checkbox checkbox-primary" {% if permission.uid in
-                        role_permission_uids %}checked{% endif %}
-                        hx-post="/admin/roles/partial/permissions/{{ role.uid }}/toggle"
-                        hx-vals='{"permission_id": "{{ permission.uid }}", "action": "{% if permission.uid in role_permission_uids %}remove{% else %}assign{% endif %}"}'
+                    <input type="checkbox" class="checkbox checkbox-primary" {% if permission.id in role_permission_ids
+                        %}checked{% endif %} hx-post="/admin/roles/partial/permissions/{{ role.id }}/toggle"
+                        hx-vals='{"permission_id": "{{ permission.id }}", "action": "{% if permission.id in role_permission_ids %}remove{% else %}assign{% endif %}"}'
                         hx-target="#modal-content" hx-swap="innerHTML" />
                 </td>
                 <td class="font-semibold">{{ permission.name }}</td>
@@ -43,6 +42,6 @@
 
 <div class="mt-4">
     <p class="text-sm text-gray-600">
-        Total permissions assigned: <strong>{{ role_permission_uids|length }}</strong>
+        Total permissions assigned: <strong>{{ role_permission_ids|length }}</strong>
     </p>
 </div>
