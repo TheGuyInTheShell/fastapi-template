@@ -2992,6 +2992,10 @@ html:has(.drawer-toggle:checked) {
   display: none;
 }
 
+.h-12 {
+  height: 3rem;
+}
+
 .h-24 {
   height: 6rem;
 }
@@ -3026,6 +3030,10 @@ html:has(.drawer-toggle:checked) {
 
 .w-10 {
   width: 2.5rem;
+}
+
+.w-12 {
+  width: 3rem;
 }
 
 .w-24 {
@@ -3356,10 +3364,6 @@ html:has(.drawer-toggle:checked) {
   font-weight: 600;
 }
 
-.italic {
-  font-style: italic;
-}
-
 .text-base-content {
   --tw-text-opacity: 1;
   color: var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)));
@@ -3368,6 +3372,11 @@ html:has(.drawer-toggle:checked) {
 .text-error {
   --tw-text-opacity: 1;
   color: var(--fallback-er,oklch(var(--er)/var(--tw-text-opacity)));
+}
+
+.text-gray-100 {
+  --tw-text-opacity: 1;
+  color: rgb(243 244 246 / var(--tw-text-opacity));
 }
 
 .text-gray-500 {
@@ -3408,10 +3417,6 @@ html:has(.drawer-toggle:checked) {
 .text-white {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
-}
-
-.text-white\/50 {
-  color: rgb(255 255 255 / 0.5);
 }
 
 .opacity-70 {
@@ -3545,9 +3550,9 @@ html:has(.drawer-toggle:checked) {
   background-color: rgb(220 38 38 / var(--tw-bg-opacity));
 }
 
-.hover\:text-white:hover {
+.hover\:text-gray-200:hover {
   --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity));
+  color: rgb(229 231 235 / var(--tw-text-opacity));
 }
 
 .focus\:ring-2:focus {
@@ -3581,12 +3586,12 @@ html:has(.drawer-toggle:checked) {
   }
 }
 
-.\[\&\>svg\]\:h-5>svg {
-  height: 1.25rem;
+.\[\&\>svg\]\:h-6>svg {
+  height: 1.5rem;
 }
 
-.\[\&\>svg\]\:w-5>svg {
-  width: 1.25rem;
+.\[\&\>svg\]\:w-6>svg {
+  width: 1.5rem;
 }
 
 .\[\&\>svg\]\:fill-current>svg {
