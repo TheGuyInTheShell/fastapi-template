@@ -105,6 +105,6 @@ async def update_meta_users(
     meta_obj = await MetaUsers.find_one(db, id)
     meta_obj.key = key
     meta_obj.value = value
-    meta_obj.ref_user = await User.find_one(db, ref_user)
+    meta_obj.ref_user = ref_user
     await meta_obj.save(db)
     return meta_obj

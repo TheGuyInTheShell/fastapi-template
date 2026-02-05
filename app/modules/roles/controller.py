@@ -25,6 +25,7 @@ async def get_Role(id: str, db: AsyncSession = Depends(get_async_db)) -> RSRole:
         result = await Role.find_one(db, id)
         return RSRole(
             uid=result.uid,
+            id=result.id,
             description=result.description,
             name=result.name,
             level=result.level,
@@ -48,6 +49,7 @@ async def get_Roles(
         mapped_result = map(
             lambda x: RSRole(
                 uid=x.uid,
+                id=x.id,
                 description=x.description,
                 name=x.name,
                 level=x.level,

@@ -13,6 +13,7 @@ class RQRole(BaseModel):
 
 class RSRole(BaseModel):
     id: int
+    uid: str
     name: str
     description: str
     level: int

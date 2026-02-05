@@ -9,10 +9,7 @@ from .base import BaseCacheBackend
 from .memory import InMemoryCacheBackend
 
 # Try to import Redis backend, but don't fail if dependencies are issues (though we know they exist)
-try:
-    from .redis.backend import RedisCacheBackend
-except ImportError:
-    RedisCacheBackend = None
+from .redis.backend import RedisCacheBackend
 
 
 class Cache:
@@ -25,7 +22,7 @@ class Cache:
         return cls._instance
 
     def _initialize(self):
-        self.backend: BaseCacheBackend = None
+        self.backend: BaseCacheBackend | None = None
 
         # Configuration
         redis_host = settings.REDIS_HOST
@@ -33,10 +30,7 @@ class Cache:
 
         # Try to initialize Redis
         try:
-            if RedisCacheBackend:
-                self.backend = RedisCacheBackend(host=redis_host, port=redis_port)
-            else:
-                raise ImportError("Redis backend not available")
+            self.backend = RedisCacheBackend(host=redis_host, port=redis_port)
         except Exception as e:
             print(
                 f"Cache Warning: Could not connect to Redis ({e}). Falling back to In-Memory."
@@ -47,36 +41,48 @@ class Cache:
 
     async def get(self, key: str) -> Any:
         try:
+            if self.backend is None:
+                return None
             return await self.backend.get(key)
         except Exception:
             return None
 
     async def set(self, key: str, value: Any, ttl: int = 60) -> None:
         try:
+            if self.backend is None:
+                return
             await self.backend.set(key, value, ttl)
         except Exception:
             pass
 
     async def delete(self, key: str) -> None:
         try:
+            if self.backend is None:
+                return
             await self.backend.delete(key)
         except Exception:
             pass
 
     def sync_get(self, key: str) -> Any:
         try:
+            if self.backend is None:
+                return None
             return self.backend.sync_get(key)
         except Exception:
             return None
 
     def sync_set(self, key: str, value: Any, ttl: int = 60) -> None:
         try:
+            if self.backend is None:
+                return
             self.backend.sync_set(key, value, ttl)
         except Exception:
             pass
 
     def sync_delete(self, key: str) -> None:
         try:
+            if self.backend is None:
+                return
             self.backend.sync_delete(key)
         except Exception:
             pass
