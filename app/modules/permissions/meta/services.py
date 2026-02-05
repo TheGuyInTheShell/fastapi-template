@@ -106,6 +106,6 @@ async def update_meta_permissions(
     meta_obj = await MetaPermissions.find_one(db, id)
     meta_obj.key = key
     meta_obj.value = value
-    meta_obj.ref_permission = await Permission.find_one(db, ref_permission)
+    meta_obj.ref_permission = ref_permission
     await meta_obj.save(db)
     return meta_obj

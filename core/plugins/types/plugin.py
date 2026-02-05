@@ -9,10 +9,11 @@ import fastapi
 import pydantic_settings
 import asyncio
 from abc import ABC
+from typing import Protocol, runtime_checkable
 
-
-class Settings(ABC):
-    pass
+@runtime_checkable
+class Settings(Protocol):
+    ...
 
 class PluginError(Exception):
     pass
