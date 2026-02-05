@@ -30,9 +30,11 @@ class MenuService:
         if not role_permissions_ids:
             return []
 
+
+        #type ignore is needed IDE antigravity doesn't recognize the in_ method xd
         stmt = (
             select(MetaPermissions)
-            .where(MetaPermissions.ref_permission.in_(role_permissions_ids))
+            .where(MetaPermissions.ref_permission.in_(role_permissions_ids)) # type: ignore
         )
         
         result = await session.execute(stmt)
@@ -43,14 +45,18 @@ class MenuService:
         for meta in meta_items:
             # check attribute name for the ID. Based on model it is ref_permission
             # effectively it is the column holding the FK.
-            p_id = meta.ref_permission
+            #idk why this have a type error if it works xd
+            new_meta: MetaPermissions = meta # type: ignore
+
+            p_id = new_meta.ref_permission 
+
 
             if p_id not in menu_grouped:
                 menu_grouped[p_id] = {}
             
             # Key format: menu_label, menu_route, menu_icon, menu_order
-            clean_key = meta.key.replace("menu_", "", 1)
-            menu_grouped[p_id][clean_key] = meta.value
+            clean_key = new_meta.key.replace("menu_", "", 1)
+            menu_grouped[p_id][clean_key] = new_meta.value
 
         # Convert to list
         menu_items = []
