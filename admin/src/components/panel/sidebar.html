@@ -5,7 +5,18 @@
 
     document.addEventListener('alpine:init', () => {
         Alpine.store('menu', {
+            items: [],
             activate: "",
+            async init() {
+                try {
+                    const response = await fetch('/admin/menu/list');
+                    if (response.ok) {
+                        this.items = await response.json();
+                    }
+                } catch (error) {
+                    console.error('Failed to load menu:', error);
+                }
+            },
             changeActivate(activate) {
                 this.activate = activate
             }
@@ -17,70 +28,18 @@
 
     <ul class="menu p-4 w-60 min-h-full bg-primary text-base-content">
 
-        <span class="text-white font-semibold mt-5">CONTENT</span>
-        <li class="flex ">
-            <a x-data href="/admin/dashboard"
-                :class="$store.menu.activate == 'dashboard' ? '{{ style_active }}' : '{{ style_inactive }}'">
-                <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#5f6368">
-                    <path
-                        d="M120-120v-80l80-80v160h-80Zm160 0v-240l80-80v320h-80Zm160 0v-320l80 81v239h-80Zm160 0v-239l80-80v319h-80Zm160 0v-400l80-80v480h-80ZM120-327v-113l280-280 160 160 280-280v113L560-447 400-607 120-327Z" />
-                </svg>
-                DASHBOARD
-            </a>
-        </li>
+        <!-- Dynamic Menu Items -->
+        <template x-for="item in $store.menu.items" :key="item.label">
+            <li class="flex">
+                <a :href="item.route"
+                    :class="$store.menu.activate == (item.key || item.label.toLowerCase()) ? 'text-white font-semibold' : 'text-white font-semibold opacity-50 cursor-not-allowed'">
+                    <!-- Icon render -->
+                    <span x-html="item.icon" class="[&>svg]:w-[24px] [&>svg]:h-[24px] [&>svg]:fill-white"></span>
+                    <span x-text="item.label.toUpperCase()"></span>
+                </a>
+            </li>
+        </template>
 
-        <li class="flex ">
-            <a x-data href="/admin/models"
-                :class="$store.menu.activate == 'models' ? '{{ style_active }}' : '{{ style_inactive }}'">
-                <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#5f6368">
-                    <path
-                        d="M480-120q-151 0-255.5-46.5T120-280v-400q0-66 105.5-113T480-840q149 0 254.5 47T840-680v400q0 67-104.5 113.5T480-120Zm0-479q89 0 179-25.5T760-679q-11-29-100.5-55T480-760q-91 0-178.5 25.5T200-679q14 30 101.5 55T480-599Zm0 199q42 0 81-4t74.5-11.5q35.5-7.5 67-18.5t57.5-25v-120q-26 14-57.5 25t-67 18.5Q600-528 561-524t-81 4q-42 0-82-4t-75.5-11.5Q287-543 256-554t-56-25v120q25 14 56 25t66.5 18.5Q358-408 398-404t82 4Zm0 200q46 0 93.5-7t87.5-18.5q40-11.5 67-26t32-29.5v-98q-26 14-57.5 25t-67 18.5Q600-328 561-324t-81 4q-42 0-82-4t-75.5-11.5Q287-343 256-354t-56-25v99q5 15 31.5 29t66.5 25.5q40 11.5 88 18.5t94 7Z" />
-                </svg>
-                MODELS
-            </a>
-        </li>
-
-        <li class="flex ">
-            <a x-data href="/admin/modules"
-                :class="$store.menu.activate == 'modules' ? '{{ style_active }}' : '{{ style_inactive }}'">
-                <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#5f6368">
-                    <path
-                        d="M600-120v-120H440v-400h-80v120H80v-320h280v120h240v-120h280v320H600v-120h-80v320h80v-120h280v320H600ZM160-760v160-160Zm520 400v160-160Zm0-400v160-160Zm0 160h120v-160H680v160Zm0 400h120v-160H680v160ZM160-600h120v-160H160v160Z" />
-                </svg>
-                MODULES
-            </a>
-        </li>
-
-
-        <span class="text-white font-semibold mt-5">ADMINITRATION</span>
-
-        <li class="flex ">
-            <a x-data href="/admin/roles"
-                :class="$store.menu.activate == 'roles' ? '{{ style_active }}' : '{{ style_inactive }}'">
-                <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#5f6368">
-                    <path
-                        d="M120-160v-112q0-34 17.5-62.5T184-378q62-31 126-46.5T440-440q20 0 40 1.5t40 4.5q-4 58 21 109.5t73 84.5v80H120ZM760-40l-60-60v-186q-44-13-72-49.5T600-420q0-58 41-99t99-41q58 0 99 41t41 99q0 45-25.5 80T790-290l50 50-60 60-60 60-80 80ZM440-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm300 80q17 0 28.5-11.5T780-440q0-17-11.5-28.5T740-480q-17 0-28.5 11.5T700-440q0 17 11.5 28.5T740-400Z" />
-                </svg>
-                ROLES
-            </a>
-        </li>
-
-        <li class="flex ">
-            <a x-data href="/admin/users"
-                :class="$store.menu.activate == 'users' ? '{{ style_active }}' : '{{ style_inactive }}'">
-                <svg class="{{ svgs }}" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#5f6368">
-                    <path
-                        d="M440-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47Zm0-80q33 0 56.5-23.5T520-640q0-33-23.5-56.5T440-720q-33 0-56.5 23.5T360-640q0 33 23.5 56.5T440-560ZM884-20 756-148q-21 12-45 20t-51 8q-75 0-127.5-52.5T480-300q0-75 52.5-127.5T660-480q75 0 127.5 52.5T840-300q0 27-8 51t-20 45L940-76l-56 56ZM660-200q42 0 71-29t29-71q0-42-29-71t-71-29q-42 0-71 29t-29 71q0 42 29 71t71 29Zm-540 40v-111q0-34 17-63t47-44q51-26 115-44t142-18q-12 18-20.5 38.5T407-359q-60 5-107 20.5T221-306q-10 5-15.5 14.5T200-271v31h207q5 22 13.5 42t20.5 38H120Zm320-480Zm-33 400Z" />
-                </svg>
-                USERS
-            </a>
-        </li>
-
-
+        <!-- Fallback or empty state could go here -->
     </ul>
 </aside>
