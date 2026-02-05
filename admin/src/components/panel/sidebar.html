@@ -1,45 +1,58 @@
 {% set svgs = 'fill-white' %}
-{% set style_active = 'text-white font-semibold' %}
-{% set style_inactive = 'text-white font-semibold opacity-50 cursor-not-allowed' %}
-<script>
+{% set style_active = 'bg-white-10 text-white font-semibold' %}
+{% set style_inactive = 'text-white-70 hover:text-white hover:bg-white-5 font-medium' %}
 
+<script>
     document.addEventListener('alpine:init', () => {
         Alpine.store('menu', {
             items: [],
-            activate: "",
+            activate: window.location.pathname,
             async init() {
                 try {
                     const response = await fetch('/admin/menu/list');
                     if (response.ok) {
                         this.items = await response.json();
+                        // Set active item based on current path if not set
+                        if (!this.activate) {
+                            this.activate = window.location.pathname;
+                        }
+                        console.log(window.location.pathname);
                     }
                 } catch (error) {
                     console.error('Failed to load menu:', error);
                 }
             },
-            changeActivate(activate) {
-                this.activate = activate
+            changeActivate(route) {
+                this.activate = route;
+            },
+            isActive(route) {
+                return this.activate === route;
             }
         })
     })
 </script>
+
 <aside class="drawer-side">
     <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
 
-    <ul class="menu p-4 w-60 min-h-full bg-primary text-base-content">
+    <ul x-data="$store.menu" class="menu p-4 w-60 min-h-full bg-primary text-base-content space-y-1">
+        <!-- Brand/Logo Area (Optional) -->
 
-        <!-- Dynamic Menu Items -->
-        <template x-for="item in $store.menu.items" :key="item.label">
-            <li class="flex">
-                <a :href="item.route"
-                    :class="$store.menu.activate == (item.key || item.label.toLowerCase()) ? 'text-white font-semibold' : 'text-white font-semibold opacity-50 cursor-not-allowed'">
+        <template x-for="item in items" :key="item.label">
+            <li>
+                <a :href="item.route" @click="changeActivate(item.route)"
+                    class="flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200"
+                    :class="isActive(item.route) ? '{{ style_active }}' : '{{ style_inactive }}'">
                     <!-- Icon render -->
-                    <span x-html="item.icon" class="[&>svg]:w-[24px] [&>svg]:h-[24px] [&>svg]:fill-white"></span>
-                    <span x-text="item.label.toUpperCase()"></span>
+                    <span x-html="item.icon" class="[&>svg]:w-5 [&>svg]:h-5 [&>svg]:fill-current"></span>
+                    <span x-text="item.label" class="text-sm"></span>
                 </a>
             </li>
         </template>
 
-        <!-- Fallback or empty state could go here -->
+        <!-- Fallback if no items -->
+        <template x-if="items.length === 0">
+            <li class="px-4 py-2 text-white/50 text-sm italic">No menu items available</li>
+        </template>
     </ul>
 </aside>

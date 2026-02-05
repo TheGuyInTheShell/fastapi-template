@@ -5,26 +5,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.modules.permissions.meta.models import MetaPermissions
 from app.modules.users.models import User
 from core.database import get_async_db
+from app.modules.permissions.models import Permission
+from app.modules.role_permissions.models import RolePermission
+from app.modules.users.schemas import RSUserTokenData
+
 
 class MenuService:
     def __init__(self):
         pass
 
-    async def get_menu(self, user: User, session: AsyncSession) -> List[Dict[str, Any]]:
+    async def get_menu(self, user: RSUserTokenData, session: AsyncSession) -> List[Dict[str, Any]]:
         """
         Generates the sidebar menu for the user based on their permissions and meta data.
         """
-        if not user.role or not user.role.permissions:
+        if not user.role:
             return []
 
-        role_permissions_ids = user.role.permissions
+        stmt = select(RolePermission.permission_id).where(
+            RolePermission.role_id == user.role
+        )
+        result = await session.execute(stmt)
+        role_permissions_ids = result.scalars().all()
 
-        # Fetch all meta permissions related to the user's permissions
-        # and filtering for menu specific keys
+        if not role_permissions_ids:
+            return []
+
         stmt = (
             select(MetaPermissions)
             .where(MetaPermissions.ref_permission.in_(role_permissions_ids))
-            .where(MetaPermissions.key.startswith("menu_"))
         )
         
         result = await session.execute(stmt)
@@ -35,7 +43,6 @@ class MenuService:
         for meta in meta_items:
             # check attribute name for the ID. Based on model it is ref_permission
             # effectively it is the column holding the FK.
-            # However typed as Permission in model, but implies int ID at runtime for the column
             p_id = meta.ref_permission
 
             if p_id not in menu_grouped:
